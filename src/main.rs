@@ -10,7 +10,7 @@ use actix_cors::Cors;
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     let host = "0.0.0.0";
-    let port = 8080;
+    let port = 80;
 
     println!("🚀 Server started successfully on http://{}:{}", host, port);
 
