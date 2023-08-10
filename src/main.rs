@@ -1,10 +1,11 @@
 use actix_web::{web, App, HttpServer};
-use crate::routes::pedido_routes::{get_pedidos, hello};
 
 mod models;
 mod database;
 mod utils;
 mod routes;
+
+use actix_cors::Cors;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -15,8 +16,10 @@ async fn main() -> Result<(), std::io::Error> {
 
     HttpServer::new(|| {
         App::new()
-            .service(web::resource("/").route(web::get().to(hello))) // Agrega la ruta /
-            .service(web::resource("/pedidos").route(web::get().to(get_pedidos)))
+            .wrap(
+                Cors::permissive()
+            )
+            .configure(routes::crm_routes::config)
     })
         .bind(format!("{}:{}", host, port))?
         .run()

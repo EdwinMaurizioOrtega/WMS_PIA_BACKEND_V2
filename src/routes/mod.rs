@@ -1,1 +1,1 @@
-pub mod pedido_routes;
+pub mod crm_routes;
