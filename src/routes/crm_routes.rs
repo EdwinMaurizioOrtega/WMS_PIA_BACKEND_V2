@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse, Responder, get};
 use sqlx::Executor;
 use sqlx::Row;
-use crate::models::pedido_prov::{PedidoProv, PedidoV2, PedidoV3, QueryDateParams, QueryParams};
+use crate::models::pedido_prov::{PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, QueryDateParams, QueryParams};
 use crate::database::connection::establish_connection;
 
 #[get("/reporte_pedido_proveedor")]
@@ -112,11 +112,11 @@ async fn get_pedido_proveedor_filtro_fechas(query_params: web::Query<QueryDatePa
 
     let query = format!(
         "SELECT T0.PEDIDO_PROV,
-                        T0.FEC_INGRESO,
+                        CONVERT(NVARCHAR(30), T0.FEC_INGRESO, 120) AS FEC_INGRESO,
                         T0.USUARIO,
                         T0.ESTATUS,
-                        T3.DESCRIPCION                                                             AS CLIENTE,
-                        T1.DESCRIPCION                                                             AS PROVEEDOR,
+                        T3.DESCRIPCION AS CLIENTE,
+                        T1.DESCRIPCION AS PROVEEDOR,
                         T2.DESCRIPCION,
                         T0.DATO1,
                         T0.DATO2,
@@ -148,7 +148,7 @@ async fn get_pedido_proveedor_filtro_fechas(query_params: web::Query<QueryDatePa
         query_params.fec_fin
     );
 
-    let pedidos: Vec<PedidoProv> = sqlx::query_as::<_, PedidoProv>(&query)
+    let pedidos: Vec<PedidoV5> = sqlx::query_as::<_, PedidoV5>(&query)
         .fetch_all(&mut connection)
         .await
         .unwrap();
@@ -329,8 +329,8 @@ async fn get_rango_fecha_creacion_pedido_proveedor(query_params: web::Query<Quer
 
     let query = format!(
         "SELECT T0.PEDIDO_PROV,
-               T0.FEC_INGRESO,
-               T0.FEC_ALTA,
+               CONVERT(NVARCHAR(30), T0.FEC_INGRESO, 120) AS FEC_INGRESO,
+               CONVERT(NVARCHAR(30), T0.FEC_ALTA, 120) AS FEC_ALTA,
                T0.USUARIO,
                T0.ESTATUS,
                T3.DESCRIPCION AS CLIENTE,
@@ -356,7 +356,7 @@ async fn get_rango_fecha_creacion_pedido_proveedor(query_params: web::Query<Quer
         query_params.fec_fin
     );
 
-    let pedidos: Vec<PedidoProv> = sqlx::query_as::<_, PedidoProv>(&query)
+    let pedidos: Vec<PedidoV4> = sqlx::query_as::<_, PedidoV4>(&query)
         .fetch_all(&mut connection)
         .await
         .unwrap();
@@ -379,8 +379,8 @@ async fn get_rango_fecha_llegada_pedido_proveedor_bodega(query_params: web::Quer
 
     let query = format!(
         "SELECT T0.PEDIDO_PROV,
-               T0.FEC_INGRESO,
-               T0.FEC_ALTA,
+               CONVERT(NVARCHAR(30), T0.FEC_INGRESO, 120) AS FEC_INGRESO,
+               CONVERT(NVARCHAR(30), T0.FEC_ALTA, 120) AS FEC_ALTA,
                T0.USUARIO,
                T0.ESTATUS,
                T3.DESCRIPCION AS CLIENTE,
@@ -406,7 +406,7 @@ async fn get_rango_fecha_llegada_pedido_proveedor_bodega(query_params: web::Quer
         query_params.fec_fin
     );
 
-    let pedidos: Vec<PedidoProv> = sqlx::query_as::<_, PedidoProv>(&query)
+    let pedidos: Vec<PedidoV4> = sqlx::query_as::<_, PedidoV4>(&query)
         .fetch_all(&mut connection)
         .await
         .unwrap();

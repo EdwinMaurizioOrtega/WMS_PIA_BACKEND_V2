@@ -48,6 +48,51 @@ pub struct PedidoV3 {
 }
 
 
+// V4
+#[derive(Serialize, FromRow)]
+pub struct PedidoV4 {
+    pub PEDIDO_PROV: i32,
+    pub FEC_INGRESO: String,
+    pub FEC_ALTA: String,
+    pub USUARIO: String,
+    pub ESTATUS: String,
+    pub CLIENTE: String,
+    pub PROVEEDOR: String,
+    pub DESCRIPCION: String,
+    pub DATO1: String,
+    pub DATO2: String,
+    pub DATO3: String,
+    pub DATO4: String,
+    pub DATO5: String,
+    pub FACTURA: String,
+    pub FACTURA_FAB: String,
+    pub VAL1: f64,
+    pub VAL2: f64,
+    pub PESO: f64,
+}
+
+#[derive(Serialize, FromRow)]
+pub struct PedidoV5 {
+    pub FEC_INGRESO: String,
+    pub USUARIO: String,
+    pub ESTATUS: String,
+    pub CLIENTE: String,
+    pub PROVEEDOR: String,
+    pub DESCRIPCION: String,
+    pub DATO1: String,
+    pub DATO2: String,
+    pub DATO3: String,
+    pub DATO4: String,
+    pub DATO5: String,
+    pub FACTURA: String,
+    pub FACTURA_FAB: String,
+    pub BULTOS: f64,
+    pub VAL1: f64,
+    pub VAL2: f64,
+    pub PESO: f64,
+}
+
+
 //Sin Fecha
 #[derive(serde::Deserialize)]
 pub struct QueryParams {
