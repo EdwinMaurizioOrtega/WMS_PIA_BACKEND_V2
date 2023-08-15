@@ -6,8 +6,11 @@ use actix_multipart::Multipart;
 use actix_web::{Error, get, HttpResponse, post, web};
 use actix_web::web::{Data, Json};
 use chrono::{Datelike, Utc};
+use dotenv::dotenv;
 use futures::StreamExt;
 use mongodb::bson::DateTime;
+use rand::distributions::Alphanumeric;
+use rand::{Rng, thread_rng};
 use crate::{models::files::Files};
 use crate::repository::mongodb_repo_files::MongoRepo;
 
@@ -44,14 +47,19 @@ async fn create_registro_imagen(db: Data<MongoRepo>, new_pre_registro: Json<File
 //Guardar los archivos en una ruta especifica en el almacenamiento local
 #[post("/upload_web_files")]
 async fn upload_file(mut payload: Multipart,) -> HttpResponse  {
-    // Utilizamos println! para imprimir el contenido de new_pre_registro
-    //println!("Llega: {:?}", new_pre_registro);
+    dotenv().ok(); // Cargar las variables de entorno desde el archivo .env
 
     let current_time = Utc::now();
     let year = current_time.year().to_string();
     let month = format!("{:02}", current_time.month());
 
-    let uploads_path = env::var("UPLOADS_PATH").unwrap();
+    let uploads_path = match env::var("UPLOADS_PATH") {
+        Ok(v) => v.to_string(),
+        Err(_) => format!("Error loading env variable"),
+    };
+
+    println!("Ruta: {:?}", uploads_path);
+
     let base_dir = Path::new(&uploads_path);
 
     // Crea la estructura de carpetas si no existen
@@ -60,11 +68,34 @@ async fn upload_file(mut payload: Multipart,) -> HttpResponse  {
     fs::create_dir_all(&month_dir).unwrap();
 
     while let Some(item) = payload.next().await {
+
         let mut field = item.unwrap();
         let content_disposition = field.content_disposition();
+
+        // Obtener el nombre del archivo de la disposición del contenido
         let filename = content_disposition.get_filename().unwrap_or("unknown");
 
-        let file_path = month_dir.join(filename);
+        // Obtener la extensión del archivo
+        let file_ext = Path::new(filename)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("");
+
+        // Generar un nombre de archivo aleatorio
+        let rand_filename: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(20) // Cambia este número a la longitud deseada del nombre
+            .map(char::from)
+            .collect();
+
+        // Concatenar el nombre de archivo aleatorio con la extensión
+        let full_filename = if file_ext.is_empty() {
+            rand_filename
+        } else {
+            format!("{}.{}", rand_filename, file_ext)
+        };
+
+        let file_path = month_dir.join(full_filename);
 
         let mut file = File::create(file_path).unwrap();
         while let Some(chunk) = field.next().await {
@@ -74,7 +105,6 @@ async fn upload_file(mut payload: Multipart,) -> HttpResponse  {
     }
 
     HttpResponse::Ok().json("Archivos recibidos y guardados correctamente")
-
 
 }
 

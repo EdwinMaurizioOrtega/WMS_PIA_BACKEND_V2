@@ -16,6 +16,7 @@ chrono = "0.4"
 dotenv = "0.15.0"
 futures = "0.3"
 actix-multipart = "0.6.0"
+rand = "0.8"
 
 [dependencies.mongodb]
 version = "2.2.0"
