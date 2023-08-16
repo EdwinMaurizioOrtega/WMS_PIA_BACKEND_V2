@@ -15,7 +15,6 @@ pub struct Files {
 
 }
 
-
 #[derive(Debug, Serialize, Deserialize, Clone)]// Agrega "Clone" aquí
 pub struct SelectedFile {
     pub file_name: String,
