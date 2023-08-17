@@ -70,16 +70,8 @@ impl MongoRepo {
     }
 
 
-    pub async fn get_files(&self, n_pedido: &String, procedencia: &String) -> Result<Vec<Files>, Error> {
-        let filter = doc! {"dn": n_pedido, "procedencia": procedencia};
-
-        // if let Some(user_detail) = self.col.find(filter, None).await.unwrap() {
-        //     Some(user_detail)
-        // } else {
-        //     None
-        // }
-
-
+    pub async fn get_pedido_files(&self, n_pedido: &String, procedencia: &String) -> Result<Vec<Files>, Error> {
+        let filter = doc! {"pedido_proveedor": n_pedido, "procedencia": procedencia};
         let mut cursors = self
             .col
             .find(filter, None)
@@ -98,7 +90,29 @@ impl MongoRepo {
             users.push(user)
         }
         Ok(users)
-
     }
+
+    pub async fn get_dn_files(&self, n_pedido: &String, procedencia: &String) -> Result<Vec<Files>, Error> {
+        let filter = doc! {"dn": n_pedido, "procedencia": procedencia};
+        let mut cursors = self
+            .col
+            .find(filter, None)
+            .await
+            .ok()
+            .expect("Error getting list of users");
+
+        let mut users: Vec<Files> = Vec::new();
+
+        while let Some(user) = cursors
+            .try_next()
+            .await
+            .ok()
+            .expect("Error mapping through cursor")
+        {
+            users.push(user)
+        }
+        Ok(users)
+    }
+
 
 }

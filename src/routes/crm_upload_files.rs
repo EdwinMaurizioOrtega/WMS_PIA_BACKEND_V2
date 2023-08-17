@@ -228,7 +228,7 @@ async fn get_list_image_by_proveedor_and_procedencia(query_params: web::Query<Qu
     println!("procedencia: {}", query_params.procedencia);
 
 
-    let user_detail_result = db.get_files(&query_params.n_pedido, &query_params.procedencia).await;
+    let user_detail_result = db.get_pedido_files(&query_params.n_pedido, &query_params.procedencia).await;
 
     // Crear la respuesta JSON
     let user_response = match user_detail_result {
@@ -250,7 +250,7 @@ async fn get_list_image_by_proveedor_and_dn(query_params: web::Query<QueryParams
     println!("procedencia: {}", query_params.procedencia);
 
 
-    let user_detail_result = db.get_files(&query_params.n_pedido, &query_params.procedencia).await;
+    let user_detail_result = db.get_dn_files(&query_params.n_pedido, &query_params.procedencia).await;
 
     // Crear la respuesta JSON
     let user_response = match user_detail_result {
