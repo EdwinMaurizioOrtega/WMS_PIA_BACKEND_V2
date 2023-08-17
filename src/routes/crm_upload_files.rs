@@ -136,14 +136,17 @@ async fn upload_file(mut payload: Multipart, db: Data<MongoRepo>) -> Result<Http
                         format!("{}.{}", rand_filename, file_ext)
                     };
 
+                    //Concatenamos num_pedido dn full filename
+                    let filename_power = format!("{}-{}-{}", form.pedido_proveedor, form.dn, full_filename);
+
                     //No mover de aqui -_-
                     let selected_file = SelectedFile {
-                        file_name: full_filename.to_string(),
+                        file_name: filename_power.to_string(),
                         file_type: file_ext.to_string(),
-                        file_url: format!("{}/api/mogo-db-wms/uploads/{}/{}/{}", url, year, month, full_filename),
+                        file_url: format!("{}/api/mogo-db-wms/uploads/{}/{}/{}", url, year, month, filename_power),
                     };
 
-                    let file_path = month_dir.join(full_filename);
+                    let file_path = month_dir.join(filename_power);
 
                     let mut file = File::create(file_path).unwrap();
                     while let Some(chunk) = field.next().await {
