@@ -8,6 +8,7 @@ pub struct Files {
     pub id: Option<ObjectId>,
     pub pedido_proveedor: String,
     pub procedencia: String,
+    pub dn:String,
     pub description: String,
     pub selected_file: Vec<SelectedFile>,
     //Fecha en la que se agrego el registro a la DB

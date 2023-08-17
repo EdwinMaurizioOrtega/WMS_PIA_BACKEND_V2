@@ -54,6 +54,7 @@ impl MongoRepo {
             id: None,
             pedido_proveedor: new_pre_registro.pedido_proveedor,
             procedencia: new_pre_registro.procedencia,
+            dn: new_pre_registro.dn,
             description: new_pre_registro.description,
             selected_file: selected_files,
             created_at:  new_pre_registro.created_at,
@@ -70,7 +71,7 @@ impl MongoRepo {
 
 
     pub async fn get_files(&self, n_pedido: &String, procedencia: &String) -> Result<Vec<Files>, Error> {
-        let filter = doc! {"pedido_proveedor": n_pedido, "procedencia": procedencia};
+        let filter = doc! {"dn": n_pedido, "procedencia": procedencia};
 
         // if let Some(user_detail) = self.col.find(filter, None).await.unwrap() {
         //     Some(user_detail)
@@ -98,11 +99,6 @@ impl MongoRepo {
         }
         Ok(users)
 
-
-
     }
-
-
-
 
 }

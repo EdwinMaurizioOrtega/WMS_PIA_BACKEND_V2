@@ -58,6 +58,7 @@ async fn upload_file(mut payload: Multipart, db: Data<MongoRepo>) -> Result<Http
         id: None,
         pedido_proveedor: String::new(),
         procedencia: String::new(),
+        dn: String::new(),
         description: String::new(),
         selected_file: Vec::new(),
         created_at: None,
@@ -103,6 +104,10 @@ async fn upload_file(mut payload: Multipart, db: Data<MongoRepo>) -> Result<Http
                 "procedencia" => {
                     let bytes = field.next().await.unwrap().unwrap();
                     form.procedencia = String::from_utf8_lossy(&bytes).to_string();
+                }
+                "dn" => {
+                    let bytes = field.next().await.unwrap().unwrap();
+                    form.dn = String::from_utf8_lossy(&bytes).to_string();
                 }
                 "description" => {
                     let bytes = field.next().await.unwrap().unwrap();
@@ -164,6 +169,7 @@ async fn upload_file(mut payload: Multipart, db: Data<MongoRepo>) -> Result<Http
         id: None,
         pedido_proveedor: form.pedido_proveedor,
         procedencia: form.procedencia,
+        dn: form.dn,
         description: form.description,
         selected_file: form.selected_file,
         created_at: None,
@@ -236,12 +242,35 @@ async fn get_list_image_by_proveedor_and_procedencia(query_params: web::Query<Qu
         .json(user_response)
 }
 
+
+//Listamos todas las imágenes y PDFs
+#[get("/dn_lista_imagenes")]
+async fn get_list_image_by_proveedor_and_dn(query_params: web::Query<QueryParams>, db: Data<MongoRepo>) -> impl Responder {
+    println!("pedidoProveedor: {}", query_params.n_pedido);
+    println!("procedencia: {}", query_params.procedencia);
+
+
+    let user_detail_result = db.get_files(&query_params.n_pedido, &query_params.procedencia).await;
+
+    // Crear la respuesta JSON
+    let user_response = match user_detail_result {
+        Ok(users) => json!({"data": users}),
+        Err(err) => json!({"error": err.to_string()}), // Convertir el error a una cadena
+    };
+
+    // Enviar la respuesta
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+}
+
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/mogo-db-wms")
         // .service(create_registro_imagen)
         .service(upload_file)
         .service(serve_file)
-        .service(get_list_image_by_proveedor_and_procedencia);
+        .service(get_list_image_by_proveedor_and_procedencia)
+        .service(get_list_image_by_proveedor_and_dn);
 
     conf.service(scope);
 }
