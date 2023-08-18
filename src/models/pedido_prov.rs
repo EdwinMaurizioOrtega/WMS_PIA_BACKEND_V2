@@ -92,6 +92,34 @@ pub struct PedidoV5 {
     pub PESO: f64,
 }
 
+#[derive(Serialize, FromRow)]
+pub struct PedidoV6 {
+    pub NUM_PEDIDO: i32,
+    pub PROCEDENCIA: i32,
+    pub FECHA: String,
+    pub CONTACTO: String,
+    pub TEL_CONTACTO: String,
+    pub CANTIDAD: f64,
+    pub TOTAL: f64,
+    pub CANTON: String,
+    pub PROVINCIA: String,
+    pub DESCRIPCION: String,
+    pub CONTRATO: String,
+    pub BULTOS: i32
+}
+
+#[derive(Serialize, FromRow)]
+pub struct PedidoV7 {
+    pub NUM_PEDIDO: i32,
+    pub PROCEDENCIA: i32,
+    pub ARTICULO: i32,
+    pub CANTIDAD: f64,
+    pub TOTAL: f64,
+    pub DESCRIPCION: String,
+    pub ART_TIPO: i32,
+    pub DESCRIPCION_2: String,
+}
+
 
 //Sin Fecha
 #[derive(serde::Deserialize)]

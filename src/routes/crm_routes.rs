@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse, Responder, get};
 use sqlx::Executor;
 use sqlx::Row;
-use crate::models::pedido_prov::{PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, QueryDateParams, QueryParams};
+use crate::models::pedido_prov::{PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams};
 use crate::database::connection::establish_connection;
 
 #[get("/reporte_pedido_proveedor")]
@@ -429,22 +429,28 @@ async fn get_despacho_pedido_proveedor(query_params: web::Query<QueryParams>) ->
 
     let query = format!(
         "SELECT T0.NUM_PEDIDO,
-               T0.PROCEDENCIA,
-               T0.FECHA,
-               T0.CONTACTO,
-               T0.TEL_CONTACTO,
-               T0.CANTIDAD,
-               T0.TOTAL,
-               T1.DESCRIPCION
-        FROM dbo.TD_CR_PEDIDO T0
-                 INNER JOIN dbo.TC_CR_CLIENTE T1 ON T1.CTE = T0.CTE and T1.CTE_PROCEDE = T0.CTE_PROCEDE
-        WHERE T0.NUM_PEDIDO = {}
-          AND T0.PROCEDENCIA = {} ",
+       T0.PROCEDENCIA,
+       CONVERT(NVARCHAR(30), T0.FECHA, 120) AS FECHA,
+       T0.CONTACTO,
+       T0.TEL_CONTACTO,
+       T0.CANTIDAD,
+       T0.TOTAL,
+       T0.CANTON,
+       T0.PROVINCIA,
+       T1.DESCRIPCION,
+       T2.CONTRATO,
+       T3.BULTOS
+FROM dbo.TD_CR_PEDIDO T0
+         INNER JOIN dbo.TC_CR_CLIENTE T1 ON T1.CTE = T0.CTE and T1.CTE_PROCEDE = T0.CTE_PROCEDE
+         INNER JOIN dbo.TD_CR_PEDIDO_CONTRATO T2 ON T0.NUM_PEDIDO = T2.NUM_PEDIDO and T0.PROCEDENCIA = T2.PROCEDENCIA
+         INNER JOIN dbo.TD_CR_PEDIDO_TRANSPORTE T3 ON T0.NUM_PEDIDO = T3.NUM_PEDIDO and T0.PROCEDENCIA = T3.PROCEDENCIA
+WHERE T0.NUM_PEDIDO = {}
+  AND T0.PROCEDENCIA = {}",
         query_params.n_pedido,
         query_params.procedencia
     );
 
-    let pedidos: Vec<PedidoProv> = sqlx::query_as::<_, PedidoProv>(&query)
+    let pedidos: Vec<PedidoV6> = sqlx::query_as::<_, PedidoV6>(&query)
         .fetch_all(&mut connection)
         .await
         .unwrap();
@@ -466,19 +472,23 @@ async fn get_despacho_detalle_pedido_proveedor(query_params: web::Query<QueryPar
 
     let query = format!(
         "SELECT T0.NUM_PEDIDO,
-               T0.PROCEDENCIA,
-               T0.ARTICULO,
-               T0.CANTIDAD,
-               T1.DESCRIPCION
-        FROM dbo.TD_CR_PEDIDO_DET T0
-                 INNER JOIN dbo.TC_CR_ARTICULO T1 ON T1.ARTICULO = T0.ARTICULO AND T1.ART_PROCEDE = T0.ART_PROCEDE
-        WHERE NUM_PEDIDO =  {}
-          AND PROCEDENCIA =  {} ",
+       T0.PROCEDENCIA,
+       T0.ARTICULO,
+       T0.CANTIDAD,
+       T0.TOTAL,
+       T1.DESCRIPCION,
+       T1.ART_TIPO,
+       T2.DESCRIPCION AS DESCRIPCION_2
+FROM dbo.TD_CR_PEDIDO_DET T0
+         INNER JOIN dbo.TC_CR_ARTICULO T1 ON T1.ARTICULO = T0.ARTICULO AND T1.ART_PROCEDE = T0.ART_PROCEDE
+         INNER JOIN TC_CR_ARTICULO_TIPO T2 ON T1.ART_TIPO = T2.ART_TIPO
+WHERE NUM_PEDIDO = {}
+  AND PROCEDENCIA = {}",
         query_params.n_pedido,
         query_params.procedencia
     );
 
-    let pedidos: Vec<PedidoProv> = sqlx::query_as::<_, PedidoProv>(&query)
+    let pedidos: Vec<PedidoV7> = sqlx::query_as::<_, PedidoV7>(&query)
         .fetch_all(&mut connection)
         .await
         .unwrap();
