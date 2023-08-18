@@ -80,7 +80,6 @@ pub struct PedidoV5 {
     pub ESTATUS: String,
     pub CLIENTE: String,
     pub PROVEEDOR: String,
-    pub DESCRIPCION_V1: String,
     pub DATO1: String,
     pub DATO2: String,
     pub DATO3: String,
@@ -96,6 +95,7 @@ pub struct PedidoV5 {
     pub CANTIDAD: f64,
     pub DATA_DET1: String,
     pub COSTO: f64,
+    pub ARTICULO: i32,
 }
 
 #[derive(Serialize, FromRow)]

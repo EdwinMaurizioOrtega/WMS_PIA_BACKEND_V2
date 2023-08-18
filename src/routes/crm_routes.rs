@@ -118,7 +118,6 @@ async fn get_pedido_proveedor_filtro_fechas(query_params: web::Query<QueryDatePa
        T0.ESTATUS,
        T2.DESCRIPCION                             AS CLIENTE,
        T1.DESCRIPCION                             AS PROVEEDOR,
-       T2.DESCRIPCION                             AS DESCRIPCION_V1,
        T0.DATO1,
        T0.DATO2,
        T0.DATO3,
@@ -133,7 +132,8 @@ async fn get_pedido_proveedor_filtro_fechas(query_params: web::Query<QueryDatePa
        T5.DESCRIPCION                             AS DESCRIPCION_V2,
        T4.CANTIDAD,
        T4.DATA_DET1,
-       T4.COSTO
+       T4.COSTO,
+       T4.ARTICULO
 FROM dbo.TD_CR_PEDIDO_PROV T0
          INNER JOIN dbo.TC_SOCIO_NEGOCIO T1 on T1.SOCIO = T0.SOCIO
          INNER JOIN dbo.TC_CR_PEDIDO_PROV_TIPO T2 ON T2.PEDIDO_PROV_TIPO = T0.PEDIDO_PROV_TIPO
