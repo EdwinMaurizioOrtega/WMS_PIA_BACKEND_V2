@@ -95,6 +95,7 @@ pub struct PedidoV5 {
     pub DESCRIPCION_V2: String,
     pub CANTIDAD: f64,
     pub DATA_DET1: String,
+    pub COSTO: f64,
 }
 
 #[derive(Serialize, FromRow)]
