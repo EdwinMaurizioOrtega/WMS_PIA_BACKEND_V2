@@ -112,37 +112,34 @@ async fn get_pedido_proveedor_filtro_fechas(query_params: web::Query<QueryDatePa
 
     let query = format!(
         "SELECT T0.PEDIDO_PROV,
-                        CONVERT(NVARCHAR(30), T0.FEC_INGRESO, 120) AS FEC_INGRESO,
-                        T0.USUARIO,
-                        T0.ESTATUS,
-                        T3.DESCRIPCION AS CLIENTE,
-                        T1.DESCRIPCION AS PROVEEDOR,
-                        T2.DESCRIPCION,
-                        T0.DATO1,
-                        T0.DATO2,
-                        T0.DATO3,
-                        T0.DATO4,
-                        T0.DATO5,
-                        T0.FACTURA,
-                        T0.FACTURA_FAB,
-                        T0.BULTOS,
-                        T0.VAL1,
-                        T0.VAL2,
-                        T0.PESO,
-                        STUFF((SELECT ', ' + T5.DESCRIPCION + ' (' + CAST(T4.CANTIDAD AS VARCHAR) + ')'
-                               FROM dbo.TD_CR_PEDIDO_PROV_DET T4
-                                        INNER JOIN dbo.TC_CR_ARTICULO T5
-                                                   ON T5.ARTICULO = T4.ARTICULO AND T5.ART_PROCEDE = T4.PROCEDENCIA
-                               WHERE T4.PEDIDO_PROV = T0.PEDIDO_PROV
-                                 AND T4.PEDIDO_PROV = 31
-                                 AND T4.PROCEDENCIA = 9000
-                                  FOR XML PATH (''), TYPE ).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS Articulos
-                 FROM dbo.TD_CR_PEDIDO_PROV T0
-                          INNER JOIN dbo.TC_SOCIO_NEGOCIO T1 on T1.SOCIO = T0.SOCIO
-                          INNER JOIN dbo.TC_CR_PEDIDO_PROV_TIPO T2 ON T2.PEDIDO_PROV_TIPO = T0.PEDIDO_PROV_TIPO
-                          INNER JOIN dbo.TC_CR_PEDIDO_PROV_TIPO T3 ON T3.PEDIDO_PROV_TIPO = T0.PEDIDO_PROV_TIPO
-                 WHERE T0.PROCEDENCIA = {}
-                   AND T0.FEC_INGRESO BETWEEN CAST('{} 00:00:00' AS datetime) AND CAST('{} 23:59:59' AS datetime)",
+       CONVERT(NVARCHAR(30), T0.FEC_INGRESO, 120) AS FEC_INGRESO,
+       CONVERT(NVARCHAR(30), T0.FEC_ALTA, 120)    AS FEC_ALTA,
+       T0.USUARIO,
+       T0.ESTATUS,
+       T3.DESCRIPCION                             AS CLIENTE,
+       T1.DESCRIPCION                             AS PROVEEDOR,
+       T2.DESCRIPCION                             AS DESCRIPCION_V1,
+       T0.DATO1,
+       T0.DATO2,
+       T0.DATO3,
+       T0.DATO4,
+       T0.DATO5,
+       T0.FACTURA,
+       T0.FACTURA_FAB,
+       T0.BULTOS,
+       T0.VAL1,
+       T0.VAL2,
+       T0.PESO,
+       T5.DESCRIPCION                             AS DESCRIPCION_V2,
+       T4.CANTIDAD,
+       T4.DATA_DET1
+FROM dbo.TD_CR_PEDIDO_PROV T0
+         INNER JOIN dbo.TC_SOCIO_NEGOCIO T1 on T1.SOCIO = T0.SOCIO
+         INNER JOIN dbo.TC_CR_PEDIDO_PROV_TIPO T2 ON T2.PEDIDO_PROV_TIPO = T0.PEDIDO_PROV_TIPO
+         INNER JOIN dbo.TC_CR_PEDIDO_PROV_TIPO T3 ON T3.PEDIDO_PROV_TIPO = T0.PEDIDO_PROV_TIPO
+         INNER JOIN dbo.TD_CR_PEDIDO_PROV_DET T4 ON T0.PEDIDO_PROV = T4.PEDIDO_PROV and T0.PROCEDENCIA = T4.PROCEDENCIA
+         INNER JOIN dbo.TC_CR_ARTICULO T5 ON T5.ARTICULO = T4.ARTICULO AND T5.ART_PROCEDE = T4.PROCEDENCIA
+WHERE T0.PROCEDENCIA = {} AND T0.FEC_ALTA BETWEEN CAST('{} 00:00:00' AS datetime) AND CAST('{} 23:59:59' AS datetime);",
         query_params.proced,
         query_params.fec_inicio,
         query_params.fec_fin
