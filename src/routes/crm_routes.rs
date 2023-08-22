@@ -1,8 +1,14 @@
 use actix_web::{web, HttpResponse, Responder, get};
+use actix_web::error::ErrorInternalServerError;
+use actix_web::error::ParseError::Status;
 use sqlx::Executor;
 use sqlx::Row;
-use crate::models::pedido_prov::{PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams};
+use crate::models::pedido_prov::{PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
 use crate::database::connection::establish_connection;
+use lettre::message::header::ContentType;
+use lettre::transport::smtp::authentication::Credentials;
+use lettre::{Message, SmtpTransport, Transport};
+use lettre::transport::smtp::extension::ClientId;
 
 #[get("/reporte_pedido_proveedor")]
 async fn get_pedido_proveedor(query_params: web::Query<QueryParams>) -> impl Responder {
@@ -498,6 +504,97 @@ WHERE NUM_PEDIDO = {}
 }
 
 
+#[get("/send_email")]
+async fn send_email_microsoft(query_params: web::Query<QueryParamsPedidoAndDN>) -> Result<HttpResponse, actix_web::Error> {
+
+
+    println!("pedidoProveedor: {}", query_params.n_pedido);
+    println!("procedencia: {}", query_params.procedencia);
+    println!("dn: {}", query_params.dn);
+
+
+//1.Buscar la fecha de ingreso
+
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = format!(
+        "SELECT T0.PEDIDO_PROV,
+                CONVERT(NVARCHAR(30), T0.FEC_INGRESO, 120) AS FEC_INGRESO,
+                T0.USUARIO,
+                T0.ESTATUS,
+                T3.DESCRIPCION AS CLIENTE,
+                T1.DESCRIPCION AS PROVEEDOR,
+                T2.DESCRIPCION,
+                T0.DATO1,
+                T0.DATO2,
+                T0.DATO3,
+                T0.DATO4,
+                T0.DATO5,
+                T0.FACTURA,
+                T0.FACTURA_FAB,
+                T0.BULTOS,
+                T0.VAL1,
+                T0.VAL2,
+                T0.PESO
+        FROM dbo.TD_CR_PEDIDO_PROV T0
+                INNER JOIN dbo.TC_SOCIO_NEGOCIO T1 on T1.SOCIO = T0.SOCIO
+                INNER JOIN dbo.TC_CR_PEDIDO_PROV_TIPO T2 ON T2.PEDIDO_PROV_TIPO = T0.PEDIDO_PROV_TIPO
+                INNER JOIN dbo.TC_CR_PEDIDO_PROV_TIPO T3 ON T3.PEDIDO_PROV_TIPO = T0.PEDIDO_PROV_TIPO
+        WHERE T0.PEDIDO_PROV = {} AND T0.PROCEDENCIA = '{}'",
+        query_params.n_pedido,
+        query_params.procedencia
+    );
+
+    let pedidos: Vec<PedidoProv> = sqlx::query_as::<_, PedidoProv>(&query)
+        .fetch_all(&mut connection)
+        .await
+        .unwrap();
+
+    let asusnto: String;  // Declarar la variable aquí para que sea válida en todo el bloque
+
+    if let Some(primer_pedido) = pedidos.first() {
+        let fec_ingreso_primer_pedido = &primer_pedido.FEC_INGRESO;
+        // Ahora fec_ingreso_primer_pedido contiene el valor de FEC_INGRESO del primer pedido
+        asusnto = format!("RECEPCIÓN DE MERCADERÍA BODEGA HT {}", fec_ingreso_primer_pedido);
+    } else {
+        println!("No se encontraron pedidos.");
+        asusnto = String::from("RECEPCIÓN DE MERCADERÍA BODEGA HT");  // Asunto predeterminado en caso de que no haya pedidos
+    }
+
+    let mensaje = format!("Estimados,\n Se confirma el ingreso a bodega de la mercadería correspondiente a:\n\n PEDIDO PROVEEDOR: {} \nDN: {}", query_params.n_pedido, query_params.dn);
+
+    let email = Message::builder()
+        .from("sistemas@movilcelistic.com".parse().unwrap())
+        .to("aibarram@movilcelistic.com".parse().unwrap())
+        .subject(asusnto)
+        .header(ContentType::TEXT_PLAIN)
+        .body(mensaje)
+        .unwrap();
+
+    let creds = Credentials::new("sistemas@movilcelistic.com".to_owned(), "gt5P4&M#C74c".to_owned());
+
+    // Open a remote connection to gmail
+    let mailer = SmtpTransport::starttls_relay("smtp.office365.com")
+        .unwrap()
+        .port(587)
+        .credentials(creds)
+        .build();
+
+    // Send the email
+    match mailer.send(&email) {
+        Ok(_) => {
+            println!("Email sent successfully!");
+            Ok(HttpResponse::Ok().body("Email sent successfully!"))
+        },
+        Err(e) => {
+            panic!("Could not send email: {:?}", e);
+            Err(ErrorInternalServerError("Could not send email"))
+        },
+    }
+
+}
+
+
 // =======Reporteria WMS - PIA=====
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/wms")
@@ -513,7 +610,8 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(get_rango_fecha_creacion_pedido_proveedor)
         .service(get_rango_fecha_llegada_pedido_proveedor_bodega)
         .service(get_despacho_pedido_proveedor)
-        .service(get_despacho_detalle_pedido_proveedor);
+        .service(get_despacho_detalle_pedido_proveedor)
+        .service(send_email_microsoft);
 
     conf.service(scope);
 }

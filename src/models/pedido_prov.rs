@@ -141,3 +141,18 @@ pub struct QueryDateParams {
     pub fec_inicio: String,
     pub fec_fin: String,
 }
+
+
+#[derive(serde::Deserialize)]
+pub struct QueryParamsPedidoAndDN {
+    pub n_pedido: String,
+    pub procedencia: String,
+    pub dn: String,
+}
+
+
+#[derive(serde::Deserialize)]
+pub struct QueryParamsDeleteImage {
+    pub id: String,
+    pub file_name: String,
+}

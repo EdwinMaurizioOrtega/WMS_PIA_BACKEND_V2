@@ -3,7 +3,7 @@ use std::fs::{File, read};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use actix_multipart::{Field, Multipart};
-use actix_web::{Error, get, HttpResponse, post, Responder, web};
+use actix_web::{delete, Error, get, HttpResponse, post, Responder, web};
 use actix_web::web::{Data, Json};
 use chrono::{Datelike, Utc};
 use dotenv::dotenv;
@@ -16,7 +16,7 @@ use serde_json::json;
 use tokio::io::AsyncWriteExt;
 use crate::{models::files::Files};
 use crate::models::files::SelectedFile;
-use crate::models::pedido_prov::QueryParams;
+use crate::models::pedido_prov::{QueryParams, QueryParamsDeleteImage, QueryParamsPedidoAndDN};
 use crate::repository::mongodb_repo_files::MongoRepo;
 
 //Guardar los detalles de las imajenes mas los nombres de los archivos
@@ -267,13 +267,59 @@ async fn get_list_image_by_proveedor_and_dn(query_params: web::Query<QueryParams
         .json(user_response)
 }
 
+#[get("/imagenes_pedido_and_dn")]
+async fn get_imagenes_by_pedido_and_dn(query_params: web::Query<QueryParamsPedidoAndDN>, db: Data<MongoRepo>) -> impl Responder {
+
+    println!("pedidoProveedor: {}", query_params.n_pedido);
+    println!("procedencia: {}", query_params.procedencia);
+    println!("dn: {}", query_params.dn);
+
+
+    let user_detail_result = db.get_pedido_and_dn_files(&query_params.n_pedido, &query_params.dn, &query_params.procedencia).await;
+
+    // Crear la respuesta JSON
+    let user_response = match user_detail_result {
+        Ok(users) => json!({"data": users}),
+        Err(err) => json!({"error": err.to_string()}), // Convertir el error a una cadena
+    };
+
+    // Enviar la respuesta
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+
+}
+
+#[delete("/delete_image")]
+async fn delete_image_by(query_params: web::Query<QueryParamsDeleteImage>, db: Data<MongoRepo>) -> impl Responder {
+
+    println!("id: {}", query_params.id);
+    println!("file_name: {}", query_params.file_name);
+
+    let user_detail_result = db.delete_image_one(&query_params.id, &query_params.file_name).await;
+
+    // Crear la respuesta JSON
+    let user_response = match user_detail_result {
+        Ok(users) => json!({"data": users}),
+        Err(err) => json!({"error": err.to_string()}), // Convertir el error a una cadena
+    };
+
+    // Enviar la respuesta
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+
+}
+
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/mogo-db-wms")
         // .service(create_registro_imagen)
         .service(upload_file)
         .service(serve_file)
         .service(get_list_image_by_proveedor_and_procedencia)
-        .service(get_list_image_by_proveedor_and_dn);
+        .service(get_list_image_by_proveedor_and_dn)
+        .service(get_imagenes_by_pedido_and_dn)
+        .service(delete_image_by);
 
     conf.service(scope);
 }

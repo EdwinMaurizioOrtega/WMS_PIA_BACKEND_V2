@@ -14,7 +14,7 @@ use mongodb::{
 use mongodb::bson::from_document;
 use crate::models::files::{Files, SelectedFile};
 
-use mongodb::error::Error as MongoError;
+use mongodb::error::{Error as MongoError, ErrorKind};
 
 
 pub struct MongoRepo {
@@ -37,7 +37,6 @@ impl MongoRepo {
     }
 
     pub async fn create_registro(&self, new_pre_registro: Files) -> Result<InsertOneResult, Error> {
-
         println!("{:?}", new_pre_registro);
 
         let selected_files = new_pre_registro
@@ -57,7 +56,7 @@ impl MongoRepo {
             dn: new_pre_registro.dn,
             description: new_pre_registro.description,
             selected_file: selected_files,
-            created_at:  new_pre_registro.created_at,
+            created_at: new_pre_registro.created_at,
         };
         let user = self
             .col
@@ -115,4 +114,42 @@ impl MongoRepo {
     }
 
 
+    pub async fn get_pedido_and_dn_files(&self, n_pedido: &String, dn: &String, procedencia: &String) -> Result<Vec<Files>, Error> {
+        let filter = doc! {"pedido_proveedor": n_pedido, "dn": dn, "procedencia": procedencia};
+        let mut cursors = self
+            .col
+            .find(filter, None)
+            .await
+            .ok()
+            .expect("Error getting list of users");
+
+        let mut users: Vec<Files> = Vec::new();
+
+        while let Some(user) = cursors
+            .try_next()
+            .await
+            .ok()
+            .expect("Error mapping through cursor")
+        {
+            users.push(user)
+        }
+        Ok(users)
+    }
+
+
+    pub async fn delete_image_one(&self, id: &String, file_name: &String) -> Result<UpdateResult, Error> {
+        let obj_id = ObjectId::parse_str(id).unwrap();
+        let filter = doc! { "_id": obj_id };
+
+        let update = doc! { "$pull": { "selected_file": { "file_name": file_name } } };
+
+        let result = self
+            .col
+            .update_one(filter, update, None)
+            .await
+            .ok()
+            .expect("Error updating user");
+
+        Ok(result)
+    }
 }
