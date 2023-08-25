@@ -12,7 +12,6 @@ use lettre::transport::smtp::extension::ClientId;
 
 #[get("/reporte_pedido_proveedor")]
 async fn get_pedido_proveedor(query_params: web::Query<QueryParams>) -> impl Responder {
-
     println!("n_pedido: {}", query_params.n_pedido);
     println!("procedencia: {}", query_params.procedencia);
 
@@ -60,7 +59,6 @@ async fn get_pedido_proveedor(query_params: web::Query<QueryParams>) -> impl Res
 
 #[get("/dn_reporte_pedido_proveedor")]
 async fn get_dn_pedido_proveedor(query_params: web::Query<QueryParams>) -> impl Responder {
-
     println!("n_pedido: {}", query_params.n_pedido);
     println!("procedencia: {}", query_params.procedencia);
 
@@ -104,7 +102,6 @@ async fn get_dn_pedido_proveedor(query_params: web::Query<QueryParams>) -> impl 
     HttpResponse::Ok()
         .content_type("application/json")
         .json(user_response)
-
 }
 
 
@@ -165,7 +162,6 @@ WHERE T0.PROCEDENCIA = {} AND T0.FEC_ALTA BETWEEN CAST('{} 00:00:00' AS datetime
 
 #[get("/reporte_detalle_pedido_proveedor")]
 async fn get_detalle_pedido_proveedor(query_params: web::Query<QueryParams>) -> impl Responder {
-
     println!("n_pedido: {}", query_params.n_pedido);
     println!("procedencia: {}", query_params.procedencia);
 
@@ -195,7 +191,6 @@ FROM TR_CR_PEDIDO_PROV_SERIE T0
     HttpResponse::Ok()
         .content_type("application/json")
         .json(user_response)
-
 }
 
 #[get("/dn_reporte_detalle_pedido_proveedor")]
@@ -237,7 +232,6 @@ async fn get_dn_detalle_pedido_proveedor(query_params: web::Query<QueryParams>) 
     HttpResponse::Ok()
         .content_type("application/json")
         .json(user_response)
-
 }
 
 #[get("/reporte_cantidad_detalle_pedido_proveedor")]
@@ -275,7 +269,6 @@ ORDER BY PEDIDO_PROV;",
     HttpResponse::Ok()
         .content_type("application/json")
         .json(user_response)
-
 }
 
 #[get("/dn_reporte_cantidad_detalle_pedido_proveedor")]
@@ -422,7 +415,6 @@ async fn get_rango_fecha_llegada_pedido_proveedor_bodega(query_params: web::Quer
 }
 
 
-
 #[get("/reporte_despacho_pedido_proveedor")]
 async fn get_despacho_pedido_proveedor(query_params: web::Query<QueryParams>) -> impl Responder {
     println!("n_pedido: {}", query_params.n_pedido);
@@ -506,8 +498,6 @@ WHERE NUM_PEDIDO = {}
 
 #[get("/send_email")]
 async fn send_email_microsoft(query_params: web::Query<QueryParamsPedidoAndDN>) -> Result<HttpResponse, actix_web::Error> {
-
-
     println!("pedidoProveedor: {}", query_params.n_pedido);
     println!("procedencia: {}", query_params.procedencia);
     println!("dn: {}", query_params.dn);
@@ -550,28 +540,15 @@ async fn send_email_microsoft(query_params: web::Query<QueryParamsPedidoAndDN>) 
         .await
         .unwrap();
 
-    let asusnto: String;  // Declarar la variable aquí para que sea válida en todo el bloque
-
-    if let Some(primer_pedido) = pedidos.first() {
-        let fec_ingreso_primer_pedido = &primer_pedido.FEC_INGRESO;
-        // Ahora fec_ingreso_primer_pedido contiene el valor de FEC_INGRESO del primer pedido
-        asusnto = format!("RECEPCIÓN DE MERCADERÍA BODEGA HT {}", fec_ingreso_primer_pedido);
-    } else {
-        println!("No se encontraron pedidos.");
-        asusnto = String::from("RECEPCIÓN DE MERCADERÍA BODEGA HT");  // Asunto predeterminado en caso de que no haya pedidos
-    }
-
-    let mensaje = format!("Estimados,\n Se confirma el ingreso a bodega de la mercadería correspondiente a:\n\n PEDIDO PROVEEDOR: {} \nDN: {}", query_params.n_pedido, query_params.dn);
-
-    let email = Message::builder()
-        .from("sistemas@movilcelistic.com".parse().unwrap())
-        .to("aibarram@movilcelistic.com".parse().unwrap())
-        .subject(asusnto)
-        .header(ContentType::TEXT_PLAIN)
-        .body(mensaje)
-        .unwrap();
 
     let creds = Credentials::new("sistemas@movilcelistic.com".to_owned(), "gt5P4&M#C74c".to_owned());
+
+    let correos = vec![
+        "allerena@movilcelistic.com",
+        "mbarahona@movilcelistic.com",
+        "sales@ht-bit.com",
+        "aibarram@movilcelistic.com",
+    ];
 
     // Open a remote connection to gmail
     let mailer = SmtpTransport::starttls_relay("smtp.office365.com")
@@ -580,20 +557,38 @@ async fn send_email_microsoft(query_params: web::Query<QueryParamsPedidoAndDN>) 
         .credentials(creds)
         .build();
 
-    // Send the email
-    match mailer.send(&email) {
-        Ok(_) => {
-            println!("Email sent successfully!");
-            Ok(HttpResponse::Ok().body("Email sent successfully!"))
-        },
-        Err(e) => {
-            panic!("Could not send email: {:?}", e);
-            Err(ErrorInternalServerError("Could not send email"))
-        },
+    for correo in correos {
+
+        let asusnto: String;  // Declarar la variable aquí para que sea válida en todo el bloque
+
+        if let Some(primer_pedido) = pedidos.first() {
+            let fec_ingreso_primer_pedido = &primer_pedido.FEC_INGRESO;
+            // Ahora fec_ingreso_primer_pedido contiene el valor de FEC_INGRESO del primer pedido
+            asusnto = format!("RECEPCIÓN DE MERCADERÍA BODEGA HT {}", fec_ingreso_primer_pedido);
+        } else {
+            println!("No se encontraron pedidos.");
+            asusnto = String::from("RECEPCIÓN DE MERCADERÍA BODEGA HT");  // Asunto predeterminado en caso de que no haya pedidos
+        }
+
+        let mensaje = format!("Estimados,\n Se confirma el ingreso a bodega de la mercadería correspondiente a:\n\n PEDIDO PROVEEDOR: {} \nDN: {}", query_params.n_pedido, query_params.dn);
+
+        let email = Message::builder()
+            .from("sistemas@movilcelistic.com".parse().unwrap())
+            .to(correo.parse().unwrap())
+            .subject(asusnto)
+            .header(ContentType::TEXT_PLAIN)
+            .body(mensaje)
+            .unwrap();
+
+        // Send the email
+        match mailer.send(&email) {
+            Ok(_) => println!("Email sent to: {}", correo),
+            Err(e) => eprintln!("Could not send email to {}: {:?}", correo, e),
+        }
     }
 
+    Ok(HttpResponse::Ok().body("Emails sent successfully!"))
 }
-
 
 // =======Reporteria WMS - PIA=====
 pub fn config(conf: &mut web::ServiceConfig) {

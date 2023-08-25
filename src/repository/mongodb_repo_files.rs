@@ -15,6 +15,8 @@ use mongodb::bson::from_document;
 use crate::models::files::{Files, SelectedFile};
 
 use mongodb::error::{Error as MongoError, ErrorKind};
+use crate::database::connection::establish_connection;
+use crate::models::mc_cliente_cnt::McClienteCnt;
 
 
 pub struct MongoRepo {
@@ -151,5 +153,21 @@ impl MongoRepo {
             .expect("Error updating user");
 
         Ok(result)
+    }
+
+
+    pub async fn get_all_clientes_cnt(&self) -> Result<Vec<McClienteCnt>, Error> {
+
+        let mut connection = establish_connection().await.unwrap();
+
+        let query = format!(
+            "SELECT * FROM McClienteCnt ORDER BY CVE ASC");
+
+        let pedidos: Vec<McClienteCnt> = sqlx::query_as::<_, McClienteCnt>(&query)
+            .fetch_all(&mut connection)
+            .await
+            .unwrap();
+
+        Ok(pedidos)
     }
 }
