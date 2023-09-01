@@ -161,7 +161,7 @@ impl MongoRepo {
         let mut connection = establish_connection().await.unwrap();
 
         let query = format!(
-            "SELECT * FROM McClienteCnt ORDER BY CVE ASC");
+            "SELECT * FROM McClienteCnt ORDER BY cve ASC");
 
         let pedidos: Vec<McClienteCnt> = sqlx::query_as::<_, McClienteCnt>(&query)
             .fetch_all(&mut connection)

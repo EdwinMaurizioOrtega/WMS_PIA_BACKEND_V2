@@ -4,13 +4,17 @@ use sqlx::FromRow;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct McClienteCnt {
-    pub CVE: Option<i32>,
-    pub OPEN_SMARTFLEX: i32,
-    pub CL_SAP: String,
-    pub ALMACEN_SAP: i32,
-    pub FECHA_CREACION: String,
-    pub FECHA_CIERRE: String,
-    pub ESTADO: i32,
-    pub REGIONAL_CANAL: String,
+    pub cve: Option<i32>,
+    pub open_smartflex: i32,
+    pub cl_sap: String,
+    pub almacen_sap: i32,
+    pub fecha_creacion: String,
+    pub fecha_cierre: Option<String>,
+    pub estado: i32,
+    pub regional_canal: String,
+}
 
+#[derive(Debug, Deserialize)] // Only deserialize the 'cve' field
+pub struct DeleteRequest {
+    pub cve: i32,
 }
