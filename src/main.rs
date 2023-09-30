@@ -20,7 +20,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     println!("🚀 Server started successfully on http://{}:{}", host, port);
 
-    // std::env::set_var("RUST_LOG", "actix_web=debug");
+    //std::env::set_var("RUST_LOG", "actix_web=debug");
     HttpServer::new( move || {
         App::new()
             .app_data(db_data.clone())
@@ -31,6 +31,7 @@ async fn main() -> Result<(), std::io::Error> {
             .configure(routes::crm_routes::config)
             .configure(routes::crm_upload_files::config)
             .configure(routes::crm_logistica_nacional::config)
+            .configure(routes::user_api::config)
     })
         .bind(format!("{}:{}", host, port))?
         .run()

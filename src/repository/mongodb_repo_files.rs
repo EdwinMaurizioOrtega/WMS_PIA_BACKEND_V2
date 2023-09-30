@@ -17,6 +17,7 @@ use crate::models::files::{Files, SelectedFile};
 use mongodb::error::{Error as MongoError, ErrorKind};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::McClienteCnt;
+use crate::models::user_model::User;
 
 
 pub struct MongoRepo {
@@ -170,4 +171,5 @@ impl MongoRepo {
 
         Ok(pedidos)
     }
+
 }
