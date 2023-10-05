@@ -32,3 +32,10 @@ pub struct UserIdentifier {
     pub user_name: String,
 }
 
+//Para los permisos de acceso
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Access {
+    pub USER_ID: i32,
+    pub SUBHEADER: i32,
+    pub PAGE: String,
+}
