@@ -1,5 +1,8 @@
 use actix_web::{delete, Error, get, HttpResponse, post, put, Responder, web};
 use chrono::{DateTime, Utc};
+use lettre::{Message, SmtpTransport, Transport};
+use lettre::message::header::ContentType;
+use lettre::transport::smtp::authentication::Credentials;
 use serde_json::json;
 
 
@@ -26,7 +29,10 @@ async fn get_all_clientes_cnt() -> impl Responder {
        ciudad,
        nombre_contacto,
        telefono_contacto,
-       fecha_modificacion
+       fecha_modificacion,
+        cl_sap_indirecto,
+        correo,
+        tiempo_entrega
 FROM MC_CLIENTE_CNT
 ORDER BY cve DESC");
 
@@ -54,7 +60,6 @@ async fn create_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     cl_sap,
     almacen_sap,
     fecha_creacion,
-
     estado,
     regional,
     canal,
@@ -62,13 +67,15 @@ async fn create_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     direccion,
     provincia,
     nombre_contacto,
-    telefono_contacto )
+    telefono_contacto,
+    cl_sap_indirecto,
+    correo,
+    tiempo_entrega)
                  OUTPUT INSERTED.cve,
                  INSERTED.open_smartflex,
                  INSERTED.cl_sap,
                  INSERTED.almacen_sap,
                  INSERTED.fecha_creacion,
-
                  INSERTED.estado,
                  INSERTED.regional,
                  INSERTED.canal,
@@ -76,8 +83,11 @@ async fn create_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
                  INSERTED.direccion,
                  INSERTED.provincia,
                  INSERTED.nombre_contacto,
-                 INSERTED.telefono_contacto
-                 VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)";
+                 INSERTED.telefono_contacto,
+                 INSERTED.cl_sap_indirecto,
+                 INSERTED.correo,
+                 INSERTED.tiempo_entrega
+                 VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15)";
 
     // Obtener la fecha y hora actual
     let fecha_actual: DateTime<Utc> = Utc::now();
@@ -100,15 +110,59 @@ async fn create_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
         .bind(&cliente_data.provincia)
         .bind(&cliente_data.nombre_contacto)
         .bind(&cliente_data.telefono_contacto)
+        .bind(&cliente_data.cl_sap_indirecto)
+        .bind(&cliente_data.correo)
+        .bind(&cliente_data.tiempo_entrega)
         .fetch_one(&mut connection)
         .await;
 
     match cli {
-        Ok(clientes) => HttpResponse::Ok().json(json!({"data": clientes})),
+        Ok(clientes) => {
+
+            //1.Enviamos la notificacion por correo
+            let creds = Credentials::new("sistemas@movilcelistic.com".to_owned(), "gt5P4&M#C74c".to_owned());
+
+            // Open a remote connection to gmail
+            let mailer = SmtpTransport::starttls_relay("smtp.office365.com")
+                .unwrap()
+                .port(587)
+                .credentials(creds)
+                .build();
+
+            // Llamar a la función notificar_correos
+            let correos = notificar_correos();
+
+            // Iterar sobre el vector y mostrar cada dirección de correo
+            for correo in correos {
+                println!("Notificando a: {}", correo);
+
+                let asusnto: String;  // Declarar la variable aquí para que sea válida en todo el bloque
+
+                asusnto = format!("CREACIÓN PUNTO DE VENTA: {:?}", clientes.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()));
+
+                let mensaje = format!("Estimados,\n Se confirma la creación del siguiente punto de venta:\n\n CLIENTE: {} ", clientes.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()));
+
+                let email = Message::builder()
+                    .from("sistemas@movilcelistic.com".parse().unwrap())
+                    .to(correo.parse().unwrap())
+                    .subject(asusnto)
+                    .header(ContentType::TEXT_PLAIN)
+                    .body(mensaje)
+                    .unwrap();
+
+                // Send the email
+                match mailer.send(&email) {
+                    Ok(_) => println!("Email sent to: {}", correo),
+                    Err(e) => eprintln!("Could not send email to {}: {:?}", correo, e),
+                }
+            }
+
+            //2.Response de los datos creados
+            HttpResponse::Ok().json(json!({"data": clientes}))
+        }
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
-
 
 
 #[delete("/cliente_cnt")]
@@ -129,11 +183,37 @@ async fn delete_cliente_cnt(cliente_data: web::Json<DeleteRequest>) -> impl Resp
     }
 }
 
+//Actualizar el punto de venta CNT
 #[put("/cliente_cnt")]
 async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Responder {
     println!("CVE: {:?}", cliente_data.cve);
 
+    //Abrimos la conexión a la base de datos
+    let mut connection = establish_connection().await.unwrap();
+
     let cve = cliente_data.cve.unwrap(); // Extrayendo el valor del Option
+
+    //Lógica para comparar que datos se actualizaron
+
+    //let query = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CVE = {:?};", cve);
+
+    //println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
+    //
+    // let result: Result<McClienteCntResult, sqlx::Error> = sqlx::query_as(&query)
+    //     .fetch_one(&mut connection)
+    //     .await;
+    //
+    // match result {
+    //     Ok(rows) => {
+    //         println!("Error al encontrar el registro: {:?}", rows);
+    //     },
+    //     Err(err) => {
+    //         println!("Error al encontrar el registro.");
+    //     },
+    // }
+
+
+
 
     // Formatear fecha_cierre correctamente eliminando comillas dobles adicionales
     // let fecha_cierre = cliente_data.fecha_cierre
@@ -149,7 +229,6 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     // Formatear la fecha y hora
     let fecha_hora_formateada = fecha_actual.format("%Y-%m-%d %H:%M:%S").to_string();
 
-    let mut connection = establish_connection().await.unwrap();
 
     let query = format!("UPDATE WMS_EC.dbo.MC_CLIENTE_CNT
     SET OPEN_SMARTFLEX = {},
@@ -163,7 +242,10 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     PROVINCIA = {},
     NOMBRE_CONTACTO = {},
     TELEFONO_CONTACTO = {},
-    FECHA_MODIFICACION = '{}'
+    FECHA_MODIFICACION = '{}',
+    CL_SAP_INDIRECTO = '{}',
+    CORREO = '{}',
+    TIEMPO_ENTREGA = '{}'
     WHERE CVE = {:?};",
                         cliente_data.open_smartflex,
                         cliente_data.cl_sap,
@@ -177,6 +259,10 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
                         cliente_data.nombre_contacto.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                         cliente_data.telefono_contacto.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                         fecha_hora_formateada,
+                        cliente_data.cl_sap_indirecto.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                        cliente_data.correo.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                        cliente_data.tiempo_entrega.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+
                         cve);
 
     println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
@@ -186,11 +272,54 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
         .await;
 
     match result {
-        Ok(_) => HttpResponse::Ok().json(json!({"message": "Record updated successfully"})),
+        Ok(_) => {
+
+            //1.Enviamos la notificacion por correo
+            let creds = Credentials::new("sistemas@movilcelistic.com".to_owned(), "gt5P4&M#C74c".to_owned());
+
+            // Open a remote connection to gmail
+            let mailer = SmtpTransport::starttls_relay("smtp.office365.com")
+                .unwrap()
+                .port(587)
+                .credentials(creds)
+                .build();
+
+            // Llamar a la función notificar_correos
+            let correos = notificar_correos();
+
+            // Iterar sobre el vector y mostrar cada dirección de correo
+            for correo in correos {
+                println!("Notificando a: {}", correo);
+
+                let asusnto: String;  // Declarar la variable aquí para que sea válida en todo el bloque
+
+                asusnto = format!("ACTUALIZACIÓN PUNTO DE VENTA: {:?}", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                );
+
+                let mensaje = format!("Estimados,\n Se confirma la actualización del siguiente punto de venta:\n\n CLIENTE: {} ", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                );
+
+                let email = Message::builder()
+                    .from("sistemas@movilcelistic.com".parse().unwrap())
+                    .to(correo.parse().unwrap())
+                    .subject(asusnto)
+                    .header(ContentType::TEXT_PLAIN)
+                    .body(mensaje)
+                    .unwrap();
+
+                // Send the email
+                match mailer.send(&email) {
+                    Ok(_) => println!("Email sent to: {}", correo),
+                    Err(e) => eprintln!("Could not send email to {}: {:?}", correo, e),
+                }
+            }
+
+            //2. Respuesta JSON
+            HttpResponse::Ok().json(json!({"message": "Record updated successfully"}))
+        }
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
-
 
 
 #[get("/parroquias")]
@@ -207,10 +336,6 @@ async fn get_all_parroquias() -> impl Responder {
         Ok(clientes) => HttpResponse::Ok().json(json!({"data": clientes})),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
-
-
-
-
 }
 
 
@@ -247,7 +372,6 @@ async fn close_local_cnt(cliente_data: web::Json<DeleteRequest>) -> impl Respond
 }
 
 
-
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/logistica-nacional")
         .service(get_all_clientes_cnt)
@@ -259,4 +383,13 @@ pub fn config(conf: &mut web::ServiceConfig) {
         ;
 
     conf.service(scope);
+}
+
+//Correos activos para enviar las notificaciones
+fn notificar_correos() -> Vec<String> {
+    let correo1 = "aibarram@movilcelistic.com".to_string();
+    //let correo2 = "sistemas@hipertronics.us".to_string();
+
+    // Devolver un vector con las direcciones de correo
+    vec![correo1]
 }

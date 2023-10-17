@@ -20,6 +20,9 @@ pub struct McClienteCnt {
     pub nombre_contacto: Option<String>,
     pub telefono_contacto: Option<String>,
     pub fecha_modificacion: Option<String>,
+    pub cl_sap_indirecto: Option<String>,
+    pub correo: Option<String>,
+    pub tiempo_entrega: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -37,6 +40,9 @@ pub struct McClienteCntResult {
     pub provincia: Option<String>,
     pub nombre_contacto: Option<String>,
     pub telefono_contacto: Option<String>,
+    pub cl_sap_indirecto: Option<String>,
+    pub correo: Option<String>,
+    pub tiempo_entrega: Option<String>,
 }
 
 #[derive(Debug, Deserialize)] // Only deserialize the 'cve' field
