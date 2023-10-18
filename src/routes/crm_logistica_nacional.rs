@@ -26,7 +26,6 @@ async fn get_all_clientes_cnt() -> impl Responder {
        descripcion_almacen,
        direccion,
        provincia,
-       ciudad,
        nombre_contacto,
        telefono_contacto,
        fecha_modificacion,
@@ -48,9 +47,9 @@ ORDER BY cve DESC");
 
 #[post("/cliente_cnt")]
 async fn create_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Responder {
-    println!("open_smartflex: {}", cliente_data.open_smartflex);
+    println!("open_smartflex: {}", cliente_data.open_smartflex.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()));
     println!("cl_sap: {}", &cliente_data.cl_sap);
-    println!("almacen_sap: {}", cliente_data.almacen_sap);
+    println!("almacen_sap: {}", cliente_data.almacen_sap.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()));
 
     let mut connection = establish_connection().await.unwrap();
 
@@ -247,9 +246,9 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     CORREO = '{}',
     TIEMPO_ENTREGA = '{}'
     WHERE CVE = {:?};",
-                        cliente_data.open_smartflex,
+                        cliente_data.open_smartflex.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()),
                         cliente_data.cl_sap,
-                        cliente_data.almacen_sap,
+                        cliente_data.almacen_sap.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()),
                         cliente_data.estado,
                         cliente_data.regional,
                         cliente_data.canal.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
@@ -326,7 +325,7 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
 async fn get_all_parroquias() -> impl Responder {
     let mut connection = establish_connection().await.unwrap();
 
-    let query = format!("SELECT * FROM MC_WEB_PARROQUIA ORDER BY id asc;");
+    let query = format!("SELECT * FROM MC_WEB_PROVINCIAS_CIUDADES ORDER BY ID_CIUDAD asc;");
 
     let cli: Result<Vec<MCParroquia>, sqlx::Error> = sqlx::query_as(&query)
         .fetch_all(&mut connection)
