@@ -242,9 +242,9 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     NOMBRE_CONTACTO = {},
     TELEFONO_CONTACTO = {},
     FECHA_MODIFICACION = '{}',
-    CL_SAP_INDIRECTO = '{}',
-    CORREO = '{}',
-    TIEMPO_ENTREGA = '{}'
+    CL_SAP_INDIRECTO = {},
+    CORREO = {},
+    TIEMPO_ENTREGA = {}
     WHERE CVE = {:?};",
                         cliente_data.open_smartflex.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()),
                         cliente_data.cl_sap,
