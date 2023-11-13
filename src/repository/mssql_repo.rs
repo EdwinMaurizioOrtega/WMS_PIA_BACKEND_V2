@@ -89,5 +89,3 @@ pub async fn get_user_access(id: i32) -> Option<Vec<Access>> {
         None
     }
 }
-
-

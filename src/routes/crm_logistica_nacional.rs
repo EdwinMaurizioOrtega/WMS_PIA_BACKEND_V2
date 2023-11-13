@@ -1,13 +1,20 @@
+use std::collections::HashMap;
+use std::fs::read;
 use actix_web::{delete, Error, get, HttpResponse, post, put, Responder, web};
 use chrono::{DateTime, Utc};
 use lettre::{Message, SmtpTransport, Transport};
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
 use serde_json::json;
+use calamine::{Reader, open_workbook, Xlsx, RangeDeserializerBuilder, DataType};
+use log::kv::Source;
+use tiberius::{AuthMethod, Client, Config};
+use tokio::net::TcpStream;
 
+use crate::database::connection::{establish_connection};
+use crate::models::mc_cliente_cnt::{DeleteRequest, McClienteCnt, McClienteCntAux, McClienteCntResult, MCParroquia};
+use tokio_util::compat::TokioAsyncWriteCompatExt;
 
-use crate::database::connection::establish_connection;
-use crate::models::mc_cliente_cnt::{DeleteRequest, McClienteCnt, McClienteCntResult, MCParroquia};
 
 //Listamos todas las imágenes y PDFs
 #[get("/clientes_cnt")]
@@ -31,7 +38,8 @@ async fn get_all_clientes_cnt() -> impl Responder {
        fecha_modificacion,
         cl_sap_indirecto,
         correo,
-        tiempo_entrega
+        tiempo_entrega,
+        user_update
 FROM MC_CLIENTE_CNT
 ORDER BY cve DESC");
 
@@ -194,25 +202,180 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
 
     //Lógica para comparar que datos se actualizaron
 
-    //let query = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CVE = {:?};", cve);
+    let query = format!("SELECT cve,
+       open_smartflex,
+       cl_sap,
+       almacen_sap,
+       fecha_creacion,
+       fecha_cierre,
+       estado,
+       regional,
+       canal,
+       descripcion_almacen,
+       direccion,
+       provincia,
+       nombre_contacto,
+       telefono_contacto,
+       fecha_modificacion,
+        cl_sap_indirecto,
+        correo,
+        tiempo_entrega,
+        user_update FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CVE = {:?};", cve);
 
-    //println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
-    //
-    // let result: Result<McClienteCntResult, sqlx::Error> = sqlx::query_as(&query)
-    //     .fetch_one(&mut connection)
-    //     .await;
-    //
-    // match result {
-    //     Ok(rows) => {
-    //         println!("Error al encontrar el registro: {:?}", rows);
-    //     },
-    //     Err(err) => {
-    //         println!("Error al encontrar el registro.");
-    //     },
-    // }
+    println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
 
+    let result: Result<Vec<McClienteCnt>, sqlx::Error> = sqlx::query_as(&query)
+        .fetch_all(&mut connection)
+        .await;
 
+    // Crear un HashMap vacío
+    let mut mi_mapa: HashMap<String, String> = HashMap::new();
 
+    match result {
+        Ok(rows) => {
+
+            if let Some(ref valor_cliente) = cliente_data.open_smartflex {
+                if let Some(ref valor_fila) = rows[0].open_smartflex.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("OPEN SMARTFLEX"),  String::from(valor_cliente));
+                    }
+                } else {
+                    // Manejar el caso en que rows[0].open_smartflex es None
+                    println!("Error: rows[0].open_smartflex es None");
+                }
+            } else {
+                // Manejar el caso en que cliente_data.open_smartflex es None
+                println!("Error: cliente_data.open_smartflex es None");
+            }
+
+            if let valor_fila = rows[0].cl_sap.clone() {
+                if cliente_data.cl_sap != valor_fila {
+                    println!("Valor modificado: {}", cliente_data.cl_sap);
+                    mi_mapa.insert(String::from("CL SAP"),  cliente_data.cl_sap.clone());
+                }
+            }
+
+            // // Verificar si el HashMap está vacío
+            // if mi_mapa.is_empty() {
+            //     println!("El HashMap está vacío");
+            // } else {
+            //     // Iterar sobre el HashMap
+            //     for (clave, valor) in &mi_mapa {
+            //         println!("Clave: {}, Valor: {}", clave, valor);
+            //     }
+            // }
+
+            if let Some(ref valor_cliente) = cliente_data.almacen_sap {
+                if let Some(ref valor_fila) = rows[0].almacen_sap.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("ALMACÉN SAP"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let valor_fila = rows[0].estado.clone() {
+                if cliente_data.estado != valor_fila {
+                    println!("Valor modificado: {}", cliente_data.estado);
+                    // Crear una variable String para almacenar el valor de cliente_data.estado
+
+                    mi_mapa.insert(String::from("ESTADO"),String::from(cliente_data.estado.to_string()));
+                }
+            }
+
+            if let valor_fila = rows[0].regional.clone() {
+                if cliente_data.regional != valor_fila {
+                    println!("Valor modificado: {}", cliente_data.regional);
+                    mi_mapa.insert(String::from("REGIONAL"), String::from(cliente_data.regional.to_string()));
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.canal {
+                if let Some(ref valor_fila) = rows[0].canal.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("CANAL"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.descripcion_almacen {
+                if let Some(ref valor_fila) = rows[0].descripcion_almacen.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("DESCRIPCIÓN ALMACÉN"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.direccion {
+                if let Some(ref valor_fila) = rows[0].direccion.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("DIRECCIÓN"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.provincia {
+                if let Some(ref valor_fila) = rows[0].provincia.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("PROVINCIA"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.nombre_contacto {
+                if let Some(ref valor_fila) = rows[0].nombre_contacto.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("NOMBRE CONTACTO"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.telefono_contacto {
+                if let Some(ref valor_fila) = rows[0].telefono_contacto.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("TELÉFONO CONTACTO"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.cl_sap_indirecto {
+                if let Some(ref valor_fila) = rows[0].cl_sap_indirecto.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("CL SAP INDIRECCTO"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.correo {
+                if let Some(ref valor_fila) = rows[0].correo.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("CORREO"), String::from(valor_cliente));
+                    }
+                }
+            }
+
+            if let Some(ref valor_cliente) = cliente_data.tiempo_entrega {
+                if let Some(ref valor_fila) = rows[0].tiempo_entrega.clone() {
+                    if valor_cliente != valor_fila {
+                        println!("Valor modificado: {}", valor_cliente);
+                        mi_mapa.insert(String::from("TIEMPO ENTREGA"), String::from(valor_cliente));
+                    }
+                }
+            }
+        }
+        Err(err) => {
+            println!("Error al encontrar el registro.");
+        }
+    }
 
     // Formatear fecha_cierre correctamente eliminando comillas dobles adicionales
     // let fecha_cierre = cliente_data.fecha_cierre
@@ -244,7 +407,8 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     FECHA_MODIFICACION = '{}',
     CL_SAP_INDIRECTO = {},
     CORREO = {},
-    TIEMPO_ENTREGA = {}
+    TIEMPO_ENTREGA = {},
+    USER_UPDATE = {}
     WHERE CVE = {:?};",
                         cliente_data.open_smartflex.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()),
                         cliente_data.cl_sap,
@@ -261,7 +425,7 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
                         cliente_data.cl_sap_indirecto.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                         cliente_data.correo.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                         cliente_data.tiempo_entrega.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
-
+                        cliente_data.user_update.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                         cve);
 
     println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
@@ -295,7 +459,13 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
                 asusnto = format!("ACTUALIZACIÓN PUNTO DE VENTA: {:?}", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                 );
 
-                let mensaje = format!("Estimados,\n Se confirma la actualización del siguiente punto de venta:\n\n CLIENTE: {} ", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                //Convertir el HashMap en un String
+                let resultadoHashMap: String = mi_mapa
+                    .iter()
+                    .map(|(clave, valor)| format!("{}: {}\n", clave, valor))
+                    .collect();
+
+                let mensaje = format!("Estimados,\n Se confirma la actualización del siguiente punto de venta:\n\n CLIENTE: {}\n\n{}", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), resultadoHashMap, // Manejar Option<String>
                 );
 
                 let email = Message::builder()
@@ -387,8 +557,34 @@ pub fn config(conf: &mut web::ServiceConfig) {
 //Correos activos para enviar las notificaciones
 fn notificar_correos() -> Vec<String> {
     let correo1 = "aibarram@movilcelistic.com".to_string();
-    //let correo2 = "sistemas@hipertronics.us".to_string();
+    let correo2 = "sistemas@hipertronics.us".to_string();
 
     // Devolver un vector con las direcciones de correo
     vec![correo1]
 }
+
+
+// async fn conectar_a_base_de_datos() {
+//     let result: Result<(), Box<dyn std::error::Error>> = async {
+//         let mut config = tiberius::Config::new();
+//         config.host("192.168.0.143");
+//         config.port(53078);
+//         config.authentication(tiberius::AuthMethod::sql_server("sati", "12345qwert"));
+//         config.encryption(tiberius::EncryptionLevel::Required);
+//
+//         let tcp = tokio::net::TcpStream::connect(config.get_addr()).await?;
+//         tcp.set_nodelay(true)?;
+//
+//         let mut client = tiberius::Client::connect(config, tcp.compat_write()).await?;
+//
+//         // Verificar que la conexión sea exitosa (puedes realizar alguna operación aquí)
+//         let query = "SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT";
+//         let _ = client.simple_query(query).await?;
+//
+//         Ok(());
+//     }.await;
+//
+//     if let Err(err) = result {
+//         eprintln!("Error de conexión: {}", err);
+//     }
+// }

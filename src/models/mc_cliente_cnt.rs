@@ -22,6 +22,7 @@ pub struct McClienteCnt {
     pub cl_sap_indirecto: Option<String>,
     pub correo: Option<String>,
     pub tiempo_entrega: Option<String>,
+    pub user_update: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -55,4 +56,12 @@ pub struct MCParroquia {
     pub NOMBRE_CIUDAD: String,
     pub NOMBRE_PROVINCIA: String,
 
+}
+
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct McClienteCntAux {
+    pub CVE: Option<i32>,
+    pub ESTADO: i32,
+    pub DESCRIPCION_ALMACEN: String,
 }
