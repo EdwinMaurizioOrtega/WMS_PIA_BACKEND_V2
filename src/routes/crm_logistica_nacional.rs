@@ -233,12 +233,11 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
 
     match result {
         Ok(rows) => {
-
             if let Some(ref valor_cliente) = cliente_data.open_smartflex {
                 if let Some(ref valor_fila) = rows[0].open_smartflex.clone() {
                     if valor_cliente != valor_fila {
                         println!("Valor modificado: {}", valor_cliente);
-                        mi_mapa.insert(String::from("OPEN SMARTFLEX"),  String::from(valor_cliente));
+                        mi_mapa.insert(String::from("OPEN SMARTFLEX"), String::from(valor_cliente));
                     }
                 } else {
                     // Manejar el caso en que rows[0].open_smartflex es None
@@ -252,7 +251,7 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
             if let valor_fila = rows[0].cl_sap.clone() {
                 if cliente_data.cl_sap != valor_fila {
                     println!("Valor modificado: {}", cliente_data.cl_sap);
-                    mi_mapa.insert(String::from("CL SAP"),  cliente_data.cl_sap.clone());
+                    mi_mapa.insert(String::from("CL SAP"), cliente_data.cl_sap.clone());
                 }
             }
 
@@ -280,7 +279,7 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
                     println!("Valor modificado: {}", cliente_data.estado);
                     // Crear una variable String para almacenar el valor de cliente_data.estado
 
-                    mi_mapa.insert(String::from("ESTADO"),String::from(cliente_data.estado.to_string()));
+                    mi_mapa.insert(String::from("ESTADO"), String::from(cliente_data.estado.to_string()));
                 }
             }
 
@@ -465,7 +464,8 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
                     .map(|(clave, valor)| format!("{}: {}\n", clave, valor))
                     .collect();
 
-                let mensaje = format!("Estimados,\n Se confirma la actualización del siguiente punto de venta:\n\n CLIENTE: {}\n\n{}", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), resultadoHashMap, // Manejar Option<String>
+                let mensaje = format!("Estimados,\n Se confirma la actualización del siguiente punto de venta:\n\n CLIENTE: {}\n\n{}\n\n{}", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), resultadoHashMap, cliente_data.user_update.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                                      // Manejar Option<String>
                 );
 
                 let email = Message::builder()
