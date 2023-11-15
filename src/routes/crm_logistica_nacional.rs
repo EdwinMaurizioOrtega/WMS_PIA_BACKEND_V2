@@ -464,7 +464,7 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
                     .map(|(clave, valor)| format!("{}: {}\n", clave, valor))
                     .collect();
 
-                let mensaje = format!("Estimados,\n Se confirma la actualización del siguiente punto de venta:\n\n CLIENTE: {}\n\n{}\n\n{}", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), resultadoHashMap, cliente_data.user_update.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                let mensaje = format!("Estimados,\n Se confirma la actualización del siguiente punto de venta:\n\n CLIENTE: {}\n\n*DATOS MODIFICADOS*\n{}\n*USUARIO RESPONSABLE*\n{}\n\nSaludos,", cliente_data.descripcion_almacen.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), resultadoHashMap, cliente_data.user_update.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                                       // Manejar Option<String>
                 );
 
@@ -560,7 +560,7 @@ fn notificar_correos() -> Vec<String> {
     let correo2 = "sistemas@hipertronics.us".to_string();
 
     // Devolver un vector con las direcciones de correo
-    vec![correo1]
+    vec![correo2]
 }
 
 
