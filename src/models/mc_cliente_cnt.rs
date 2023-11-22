@@ -23,6 +23,8 @@ pub struct McClienteCnt {
     pub correo: Option<String>,
     pub tiempo_entrega: Option<String>,
     pub user_update: Option<String>,
+    pub temp_loc_fecha_cierre: Option<String>,
+    pub temp_loc_fecha_apertura: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]

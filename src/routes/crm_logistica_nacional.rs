@@ -39,7 +39,9 @@ async fn get_all_clientes_cnt() -> impl Responder {
         cl_sap_indirecto,
         correo,
         tiempo_entrega,
-        user_update
+        user_update,
+        temp_loc_fecha_cierre,
+        temp_loc_fecha_apertura
 FROM MC_CLIENTE_CNT
 ORDER BY cve DESC");
 
@@ -217,10 +219,13 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
        nombre_contacto,
        telefono_contacto,
        fecha_modificacion,
-        cl_sap_indirecto,
-        correo,
-        tiempo_entrega,
-        user_update FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CVE = {:?};", cve);
+       cl_sap_indirecto,
+       correo,
+       tiempo_entrega,
+       user_update,
+       temp_loc_fecha_cierre,
+       temp_loc_fecha_apertura
+       FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CVE = {:?};", cve);
 
     println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
 
@@ -385,6 +390,8 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     //     })
     //     .unwrap_or("NULL".to_string());
 
+    // =========================BLOQUE ACTUALIZAR CLIENTE EN DB =================================
+
     // Obtener la fecha y hora actual
     let fecha_actual: DateTime<Utc> = Utc::now();
     // Formatear la fecha y hora
@@ -407,7 +414,9 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
     CL_SAP_INDIRECTO = {},
     CORREO = {},
     TIEMPO_ENTREGA = {},
-    USER_UPDATE = {}
+    USER_UPDATE = {},
+    TEMP_LOC_FECHA_CIERRE = {},
+    TEMP_LOC_FECHA_APERTURA = {}
     WHERE CVE = {:?};",
                         cliente_data.open_smartflex.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()),
                         cliente_data.cl_sap,
@@ -425,6 +434,9 @@ async fn update_cliente_cnt(cliente_data: web::Json<McClienteCnt>) -> impl Respo
                         cliente_data.correo.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                         cliente_data.tiempo_entrega.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                         cliente_data.user_update.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                        //Fechas para el cierre y apertura de un punto de venta temporal
+                        cliente_data.temp_loc_fecha_cierre.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
+                        cliente_data.temp_loc_fecha_apertura.as_ref().map(|s| format!("'{}'", s)).unwrap_or("NULL".to_string()), // Manejar Option<String>
                         cve);
 
     println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
