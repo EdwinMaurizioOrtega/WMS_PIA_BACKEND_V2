@@ -569,10 +569,11 @@ pub fn config(conf: &mut web::ServiceConfig) {
 //Correos activos para enviar las notificaciones
 fn notificar_correos() -> Vec<String> {
     let correo1 = "aibarram@movilcelistic.com".to_string();
+    //Pruebas
     let correo2 = "sistemas@hipertronics.us".to_string();
 
     // Devolver un vector con las direcciones de correo
-    vec![correo2]
+    vec![correo1]
 }
 
 
