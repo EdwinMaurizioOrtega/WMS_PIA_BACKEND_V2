@@ -1,9 +1,15 @@
-use actix_web::{get, Responder, web};
-use calamine::{open_workbook, Reader};
+use std::io;
+use std::io::{Cursor, Write};
+use actix_multipart::Multipart;
+use actix_web::{get, HttpResponse, post, Responder, web};
+use actix_web::web::Bytes;
+use calamine::{open_workbook, Reader, Xlsx};
+use futures::{AsyncReadExt, StreamExt};
+use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::McClienteCntAux;
 
-#[get("/pedidos_puntuales")]
+#[get("/pedidos_puntuales_aux")]
 async fn formato_carga_pedido() -> impl Responder {
 
     // conectar_a_base_de_datos().await;
@@ -462,21 +468,6 @@ async fn formato_carga_pedido() -> impl Responder {
             }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             println!("HOJA: PEDIDOS_INDIRECTOS");
 
             //Validación todas las columnas
@@ -560,7 +551,6 @@ async fn formato_carga_pedido() -> impl Responder {
                             .await;
 
                         match cli {
-
                             Ok(clientes) => {
 
                                 // Haz algo con los resultados (en este caso, imprimir el estado del primer cliente)
@@ -587,7 +577,6 @@ async fn formato_carga_pedido() -> impl Responder {
                                 boolean_validacion_individual_3.push(false);
                             }
                         }
-
                     }
                 }
 
@@ -611,9 +600,7 @@ async fn formato_carga_pedido() -> impl Responder {
                 //Validación primera columna
                 let mut boolean_validacion_individual_3: Vec<bool> = vec![];
                 for (row_index, row) in range.rows().skip(5).enumerate() {
-
                     if let Some(cell) = row.get(3) {
-
                         println!("{:?}", cell);
 
                         //Número de bodega SAP, la obtenemos del índice columna 2
@@ -649,21 +636,6 @@ async fn formato_carga_pedido() -> impl Responder {
                         //         boolean_validacion_individual_3.push(false);
                         //     }
                         // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                     }
                 }
 
@@ -908,20 +880,6 @@ async fn formato_carga_pedido() -> impl Responder {
                 // ALMACEN EMISOR
                 // 1000
                 // CAMPO FIJO
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             }
 
             //==============================================================================
@@ -1243,20 +1201,6 @@ async fn formato_carga_pedido() -> impl Responder {
 
                 //12va Columna
                 // ***TODO LLENO
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             }
 
             //==============================================================================
@@ -1519,11 +1463,9 @@ async fn formato_carga_pedido() -> impl Responder {
                         println!("No todos los elementos son true.");
                     }
                 }
-
             }
 
             //==============================================================================
-
 
 
             //RESULTADO FINAL
@@ -1545,11 +1487,6 @@ async fn formato_carga_pedido() -> impl Responder {
 
             //=============================================
             //PEDIDOS_INDIRECTOS
-
-
-
-
-
         }
         Err(e) => {
             println!("Error al abrir el archivo: {:?}", e);
@@ -1560,12 +1497,109 @@ async fn formato_carga_pedido() -> impl Responder {
 }
 
 
+#[post("/pedido_puntual")]
+async fn cargar_validar_file_pedidos_puntuales(mut payload: Multipart) -> Result<HttpResponse, actix_web::Error> {
 
+    while let Some(item) = payload.next().await {
+        let mut field = item?;
+        let content_type = field.content_disposition();
+
+        if let Some(name) = content_type.get_name() {
+            match name {
+                "fileCNT" => {
+                    let filename = content_type.get_filename().unwrap();
+
+                    println!("Nombre de alchivo CNT: {}", filename);
+
+                    //1. Creación de un archivo temporal usando tempfile::NamedTempFile:
+                    // NamedTempFile::new()?: Esto crea un nuevo archivo temporal y devuelve un Result que puede contener el archivo temporal (Ok(NamedTempFile)) o un error (Err).
+                    let mut temp_file = NamedTempFile::new()?;
+                    let mut file_content = Vec::new();
+
+                    //2. Lectura y escritura de bytes en el archivo temporal:
+                    // field.next().await: Obtiene el siguiente fragmento de bytes del campo multipart.
+                    // let data = chunk?;: Desempaqueta el fragmento de bytes o maneja un error si ocurre.
+                    //     file_content.extend_from_slice(&data);: Extiende el vector file_content con los bytes del fragmento actual.
+                    //     temp_file.write_all(&data)?;: Escribe los bytes del fragmento en el archivo temporal.
+                    while let Some(chunk) = field.next().await {
+                        let data = chunk?;
+                        file_content.extend_from_slice(&data);
+                        temp_file.write_all(&data)?;
+                    }
+
+                    //3. Obtención de la ruta del archivo temporal:
+                    // temp_file.path(): Obtiene la ruta del archivo temporal.
+                    //     to_owned(): Crea una copia propia de la ruta.
+                    let temp_file_path = temp_file.path().to_owned();
+
+                    //4. Procesamiento del archivo Excel con calamine:
+                    // open_workbook(&temp_file_path): Intenta abrir el archivo Excel en la ruta proporcionada.
+                    //     .expect("Cannot open file"): Proporciona un mensaje de error si no puede abrir el archivo.
+                    let mut workbook: Xlsx<_> = open_workbook(&temp_file_path).expect("Cannot open file");
+
+                    //5. Limpieza y eliminación automática del archivo temporal:
+                    // El archivo temporal se eliminará automáticamente al salir del bloque de alcance.
+                    // Al utilizar NamedTempFile, el archivo temporal se eliminará automáticamente cuando la variable temp_file salga del alcance.
+
+
+                    //Validación todas las columnas
+                    let mut boolean_validacion_all: Vec<bool> = vec![];
+
+                    if let Some(Ok(range)) = workbook.worksheet_range("PEDIDOS_PUNTUALES") {
+
+                        //Número de filas
+                        let mut totalFilas: i32 = 0;
+                        println!("1ra Columna: N° BODEGA OPEN");
+                        //Validación primera columna
+                        let mut boolean_validacion_individual_uno: Vec<bool> = vec![];
+                        for (row_index, row) in range.rows().skip(2).enumerate() {
+                            if let Some(cell) = row.get(0) {
+                                println!("{:?}", cell);
+                                //Saber el número de filas.
+                                totalFilas += 1;
+                                boolean_validacion_individual_uno.push(true);
+                            }
+                        }
+
+                        println!("Número total de filas: {}", totalFilas);
+                        println!("Validación individual: {:?}", boolean_validacion_individual_uno);
+
+                        if boolean_validacion_individual_uno.len() == totalFilas as usize {
+
+                            // Verificar si todos los elementos son true
+                            let todos_true = boolean_validacion_individual_uno.iter().all(|&x| x == true);
+
+                            if todos_true {
+                                println!("Todos los elementos son true.");
+                                boolean_validacion_all.push(true);
+                            } else {
+                                println!("No todos los elementos son true.");
+                            }
+                        }
+
+                        //Fin.
+                    } else {
+                        println!("No se encontró la hoja 'PEDIDOS_PUNTUALES'");
+                    }
+
+                    // Asegurarse de que el archivo temporal se elimine cuando ya no se necesite
+
+
+                }
+                _ => (),
+            }
+        }
+    }
+
+    Ok(HttpResponse::Ok().json("CNT OK"))
+}
 
 
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/plantilla")
-        .service(formato_carga_pedido);
+        .service(formato_carga_pedido)
+        .service(cargar_validar_file_pedidos_puntuales)
+        ;
 
     conf.service(scope);
 }
