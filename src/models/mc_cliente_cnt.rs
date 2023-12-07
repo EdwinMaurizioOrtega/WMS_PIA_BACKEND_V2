@@ -63,7 +63,16 @@ pub struct MCParroquia {
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct McClienteCntAux {
-    pub CVE: Option<i32>,
+    pub CVE: i32,
     pub ESTADO: i32,
+    pub CANAL: String,
     pub DESCRIPCION_ALMACEN: String,
+    pub REGIONAL: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct MC_WEB_PROVINCIAS_CIUDADES {
+    pub ID_CIUDAD: i64,
+    pub NOMBRE_CIUDAD: String,
+    pub NOMBRE_PROVINCIA: String,
 }
