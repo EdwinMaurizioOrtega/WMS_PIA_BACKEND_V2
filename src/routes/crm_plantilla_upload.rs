@@ -7,9 +7,11 @@ use actix_web::web::Bytes;
 use calamine::{open_workbook, Reader, Xlsx};
 use chrono::Local;
 use futures::{AsyncReadExt, StreamExt};
+use serde_json::json;
 use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
-use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCntAux};
+use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCnt, McClienteCntAux};
+use crate::models::mc_consolidado::MC_WEB_CONSOLIDADO_CARGA_PEDIDOS;
 
 #[get("/pedidos_puntuales_aux")]
 async fn formato_carga_pedido() -> impl Responder {
@@ -2531,11 +2533,30 @@ fn imprimir_matriz(matriz: &Vec<Vec<String>>) {
     }
 }
 
+#[get("/consolidado")]
+async fn reporte_consolidado() -> impl Responder{
+
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = format!("SELECT * FROM MC_WEB_CONSOLIDADO_CARGA_PEDIDOS");
+
+    let cli: Result<Vec<MC_WEB_CONSOLIDADO_CARGA_PEDIDOS>, sqlx::Error> = sqlx::query_as(&query)
+        .fetch_all(&mut connection)
+        .await;
+
+    match cli {
+        Ok(clientes) => HttpResponse::Ok().json(json!({"data": clientes})),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
+
+
+}
 
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/plantilla")
         .service(formato_carga_pedido)
         .service(cargar_validar_file_pedidos_puntuales)
+        .service(reporte_consolidado)
         ;
 
     conf.service(scope);

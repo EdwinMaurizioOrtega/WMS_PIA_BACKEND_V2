@@ -76,3 +76,4 @@ pub struct MC_WEB_PROVINCIAS_CIUDADES {
     pub NOMBRE_CIUDAD: String,
     pub NOMBRE_PROVINCIA: String,
 }
+
