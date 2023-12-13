@@ -3,6 +3,7 @@ use sqlx::FromRow;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct MC_WEB_CONSOLIDADO_CARGA_PEDIDOS {
+    pub ID: i32,
     pub FECHA: String,
     pub PEDIDO_TRASLADO: String,
     pub CENTRO_SUMINISTRADOR: String,
@@ -22,5 +23,11 @@ pub struct MC_WEB_CONSOLIDADO_CARGA_PEDIDOS {
     pub CATEGORIA: String,
     pub ARTICULO: String,
     pub ALMACEN: String,
+    pub PEDIDO: String,
+}
+
+#[derive(Debug, Deserialize)] // Only deserialize the 'cve' field
+pub struct PedidoConsolidado {
+    pub ID: i32,
     pub PEDIDO: String,
 }

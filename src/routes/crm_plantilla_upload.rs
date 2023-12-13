@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::io;
 use std::io::{Cursor, Write};
 use actix_multipart::Multipart;
-use actix_web::{get, HttpResponse, post, Responder, web};
+use actix_web::{get, HttpResponse, post, put, Responder, web};
 use actix_web::web::Bytes;
 use calamine::{open_workbook, Reader, Xlsx};
 use chrono::Local;
@@ -11,7 +11,7 @@ use serde_json::json;
 use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCnt, McClienteCntAux};
-use crate::models::mc_consolidado::MC_WEB_CONSOLIDADO_CARGA_PEDIDOS;
+use crate::models::mc_consolidado::{MC_WEB_CONSOLIDADO_CARGA_PEDIDOS, PedidoConsolidado};
 
 #[get("/pedidos_puntuales_aux")]
 async fn formato_carga_pedido() -> impl Responder {
@@ -2500,7 +2500,6 @@ async fn cargar_validar_file_pedidos_puntuales(mut payload: Multipart) -> Result
                             }
 
                             return Ok(HttpResponse::Ok().json("¡Archivo válido!"));
-
                         } else {
                             println!("No todos los elementos son true - Validar datos del archivo.");
                             return Ok(HttpResponse::BadRequest().json("Formato de archivo incorrecto"));
@@ -2534,8 +2533,7 @@ fn imprimir_matriz(matriz: &Vec<Vec<String>>) {
 }
 
 #[get("/consolidado")]
-async fn reporte_consolidado() -> impl Responder{
-
+async fn reporte_consolidado() -> impl Responder {
     let mut connection = establish_connection().await.unwrap();
 
     let query = format!("SELECT * FROM MC_WEB_CONSOLIDADO_CARGA_PEDIDOS");
@@ -2548,8 +2546,34 @@ async fn reporte_consolidado() -> impl Responder{
         Ok(clientes) => HttpResponse::Ok().json(json!({"data": clientes})),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
+}
 
+#[put("/add_pedido_consolidado")]
+async fn update_pedido_consolidado(data: web::Json<PedidoConsolidado>) -> impl Responder {
+    println!("ID: {:?}", data.ID);
 
+    let id = data.ID; // Extrayendo el valor del Option
+    let pedido = &data.PEDIDO; // Extrayendo el valor del Option
+
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = format!("UPDATE WMS_EC.dbo.MC_WEB_CONSOLIDADO_CARGA_PEDIDOS
+    SET
+    PEDIDO = '{}'
+    WHERE ID = {:?};",
+                        pedido,
+                        id);
+
+    println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
+
+    let result = sqlx::query(&query)
+        .execute(&mut connection)
+        .await;
+
+    match result {
+        Ok(_) => HttpResponse::Ok().json(json!({"message": "PEDIDO registrada correctamente."})),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
 }
 
 pub fn config(conf: &mut web::ServiceConfig) {
@@ -2557,6 +2581,7 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(formato_carga_pedido)
         .service(cargar_validar_file_pedidos_puntuales)
         .service(reporte_consolidado)
+        .service(update_pedido_consolidado)
         ;
 
     conf.service(scope);
