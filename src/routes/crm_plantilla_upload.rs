@@ -3234,9 +3234,9 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
 
                             if let Some(cell) = row.get(1) {
                                 println!("{:?}", cell);
-                                //Saber el número de filas.
 
-                               let codArticulo = 556;
+                                //Con el CODIGO PIA - codArticulo buscamos el CODIGO SAP.
+                                let codArticulo = row.get(0).unwrap();
 
                                 let mut connection = establish_connection().await.unwrap();
 
@@ -3247,7 +3247,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                             ORDER BY VALOR1_NUM", codArticulo);
 
                                 // Ejecuta la consulta y obtén el resultado
-                               let rows = sqlx::query(&*query)
+                                let rows = sqlx::query(&*query)
                                     .fetch_all(&mut connection)
                                     .await
                                     .unwrap();
@@ -3256,14 +3256,10 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 if rows.is_empty() {
                                     //Si no se encuentra ningun resultado.
                                     boolean_validacion_individual_2.push(false);
-
-                                }else {
+                                } else {
                                     //Si se encuentra mas de un resultado.
                                     boolean_validacion_individual_2.push(true);
-
                                 }
-
-
                             }
                         }
 
@@ -3279,6 +3275,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
 
@@ -3311,6 +3308,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
 
@@ -3342,6 +3340,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
 
@@ -3374,6 +3373,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
 
@@ -3405,6 +3405,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
 
@@ -3437,6 +3438,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
 
@@ -3469,6 +3471,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
 
@@ -3501,9 +3504,9 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
-
 
 
                         //12va Columna
@@ -3582,7 +3585,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                             let mut connection = establish_connection().await.unwrap();
 
                             // Construir la consulta SQL fuera del bucle
-                            let query = "INSERT INTO MC_WEB_PEDIDOS_POP (CODIGO_PIA, CODIGO_SAP, DESCRIPCION, ESTADO, CANTIDAD, BODEGA_OPEN, BODEGA_SAP,
+                            let query_1 = "INSERT INTO MC_WEB_PEDIDOS_POP (CODIGO_PIA, CODIGO_SAP, DESCRIPCION, ESTADO, CANTIDAD, BODEGA_OPEN, BODEGA_SAP,
                                 DESCRIPCION_ALMACEN, ALMACEN) VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9);";
 
                             for fila in &matriz {
@@ -3592,7 +3595,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                     fila.iter().map(|valor| limpiar_valor(valor)).collect();
 
                                 // Ejecutar la consulta dentro del bucle
-                                if let Err(err) = sqlx::query(query)
+                                if let Err(err) = sqlx::query(query_1)
                                     .bind(&valores_limpios[0])
                                     .bind(&valores_limpios[1])
                                     .bind(&valores_limpios[2])
@@ -3611,15 +3614,15 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                             }
 
 
-                            //Imprimir solo los valores de la columna uno
-                            // for fila in &matriz {
-                            //     if let Some(valor) = fila.get(0).and_then(|v| v.as_ref()) {
-                            //         print!("{} ", valor);
-                            //     } else {
-                            //         print!("Empty ");
-                            //     }
-                            //     println!();
-                            // }
+                            // //Imprimir solo los valores de la columna uno
+                            // // for fila in &matriz {
+                            // //     if let Some(valor) = fila.get(0).and_then(|v| v.as_ref()) {
+                            // //         print!("{} ", valor);
+                            // //     } else {
+                            // //         print!("Empty ");
+                            // //     }
+                            // //     println!();
+                            // // }
 
 
                             //============== SEGUNDO BLOQUE CÓDIGO=============================
@@ -3648,15 +3651,8 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 }
 
                                 //PEDIDO SAP - Pedido Traslado
-                                if let Some(valor) = fila.get(1).and_then(|v| v.as_ref()) {
-                                    //print!("{} ", valor);
-
-                                    // Añadir valores a la primera columna de matrizMaster
-                                    for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                        fila_master[1] = limpiar_cadenaV2(valor).to_string();  // Asignar valores de la primera columna como cadenas
-                                    }
-                                } else {
-                                    print!("Empty ");
+                                for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                    fila_master[1] = "PENDIENTE".to_string();  // Asignar valores de la primera columna como cadenas
                                 }
 
                                 //CAMPO FIJO - Centro Suministrador
@@ -3666,24 +3662,72 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
 
 
                                 // ALMACEN EMISOR - Almacén emisor
-                                for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                    fila_master[3] = "1000".to_string();  // Asignar valores de la primera columna como cadenas
-                                }
-
-                                //CODIGO SAP - Material
-                                if let Some(valor) = fila.get(4).and_then(|v| v.as_ref()) {
-
-                                    // Añadir valores a la primera columna de matrizMaster
+                                if let Some(valor) = fila.get(8).and_then(|v| v.as_ref()) {
                                     for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                        fila_master[4] = limpiar_cadenaV2(valor).to_string();  // Asignar valores de la primera columna como cadenas
+                                        fila_master[3] = valor.to_string();  // Asignar valores de la primera columna como cadenas
                                     }
                                 } else {
                                     print!("Empty ");
                                 }
 
+                                //CODIGO SAP - Material
+                                //================================
+                                //Con el CODIGO PIA - codArticulo buscamos el CODIGO SAP.
+
+                                let codArticuloAux = limpiar_cadenaV2(&fila.get(0).unwrap_or(&None).clone().unwrap_or_default());
+
+                                let codArticulo: i64 = codArticuloAux.parse::<i64>().unwrap();
+
+                                println!("codArticulo: {:?}", codArticulo);
+
+                                let mut connection = establish_connection().await.unwrap();
+
+                                // Realiza la consulta SQL
+                                let query_2 = format!("SELECT t.VALOR1
+                                            FROM WMS_EC.dbo.TC_CR_ARTICULO t
+                                            WHERE ART_PROCEDE = 7001 AND ARTICULO = {:?}
+                                            ORDER BY VALOR1_NUM", codArticulo);
+
+                                // Ejecuta la consulta y obtén el resultado
+                                let rows = sqlx::query(&*query_2)
+                                    .fetch_all(&mut connection)
+                                    .await
+                                    .unwrap();
+
+                                //
+                                // for row in rows {
+                                //     let valor_sap: String = row.get("VALOR1");
+                                //     println!("CODIGO SAP encontrado: {}", valor_sap);
+                                // }
+
+                                let mut valor_sap: &str = "556";
+
+                                let mut val_string = String::new(); // Declare val_string outside the block
+
+
+                                if let Some(row) = rows.get(0) {
+                                    if let Some(val) = row.get::<Option<String>, _>("VALOR1") {
+                                        println!("{}", val);
+
+                                        val_string = val.to_string();
+                                        valor_sap = val_string.as_str();
+
+                                        println!("CODIGO SAP encontrado: {}", val);
+
+                                        // Añadir valores a la primera columna de matrizMaster
+                                        for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                            fila_master[4] = val.to_string();
+                                        }
+                                    }
+                                } else {
+                                    println!("No se encontró ningún resultado para el CODIGO PIA: {:?}", codArticulo);
+                                    print!("Empty ");
+                                }
+                                //================================
+
 
                                 //DESCRIPCION - Descripción Material
-                                if let Some(valor) = fila.get(5).and_then(|v| v.as_ref()) {
+                                if let Some(valor) = fila.get(2).and_then(|v| v.as_ref()) {
 
                                     // Añadir valores a la primera columna de matrizMaster
                                     for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
@@ -3694,7 +3738,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 }
 
                                 //CANTIDAD - Cantidad
-                                if let Some(valor) = fila.get(6).and_then(|v| v.as_ref()) {
+                                if let Some(valor) = fila.get(4).and_then(|v| v.as_ref()) {
 
                                     // Añadir valores a la primera columna de matrizMaster
                                     for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
@@ -3705,8 +3749,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 }
 
                                 //BODEGA SAP - Centro
-                                if let Some(valor) = fila.get(8).and_then(|v| v.as_ref()) {
-
+                                if let Some(valor) = fila.get(6).and_then(|v| v.as_ref()) {
                                     // Añadir valores a la primera columna de matrizMaster
                                     for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
                                         fila_master[7] = limpiar_cadenaV2(valor).to_string();  // Asignar valores de la primera columna como cadenas
@@ -3717,63 +3760,101 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
 
                                 //SI ES INDIRECTO DEL CAMPO "AGENTE COMERCIAL",CASO CONTRARIO CRUZO BODEGA SAP BASE CLIENTES "DESCRIPCION ALMACEN"
                                 // Descripción Centro
-                                if let Some(valor) = fila.get(9).and_then(|v| v.as_ref()) {
-                                    // Añadir valores a la primera columna de matrizMaster
-                                    for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                        fila_master[8] = limpiar_cadenaV2(valor).to_string();  // Asignar valores de la primera columna como cadenas
+                                // if let Some(valor) = fila.get(9).and_then(|v| v.as_ref()) {
+                                //     // Añadir valores a la primera columna de matrizMaster
+                                //     for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                //         fila_master[8] = limpiar_cadenaV2(valor).to_string();  // Asignar valores de la primera columna como cadenas
+                                //     }
+                                // } else {
+                                //     print!("Empty ");
+                                // }
+
+                                println!("Muy importante valor_sap: {:?}", valor_sap);
+                                let valor_str = limpiar_cadenaV2(valor_sap);
+                                println!("Valor a consultar en la DB: {}", valor_str);
+
+                                let mut connection = establish_connection().await.unwrap();
+
+                                let query_3 = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CL_SAP LIKE '{}'", valor_str);
+
+                                println!("Query: {}", query_3);
+
+                                let cli: Result<Vec<McClienteCntAux>, sqlx::Error> = sqlx::query_as(&query_3)
+                                    .fetch_all(&mut connection)
+                                    .await;
+
+                                match cli {
+                                    Ok(clientes) => {
+
+                                        // Haz algo con los resultados (en este caso, imprimir el estado del primer cliente)
+                                        if let Some(primer_cliente) = clientes.get(0) {
+                                            println!("DESCRIPCION_ALMACEN Cliente: {:?}", primer_cliente.DESCRIPCION_ALMACEN);
+
+                                            // Añadir valores a la primera columna de matrizMaster
+                                            for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                                fila_master[8] = limpiar_cadenaV2(primer_cliente.DESCRIPCION_ALMACEN.as_str()).to_string();  // Asignar valores de la primera columna como cadenas
+                                            }
+                                        } else {
+                                            println!("La consulta no devolvió ningún cliente");
+
+                                            for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                                fila_master[8] = "Empy".parse()?;  // Asignar valores de la primera columna como cadenas
+                                            }
+                                        }
                                     }
-                                } else {
-                                    print!("Empty ");
+                                    Err(err) => {
+                                        println!("No se encuentra");
+                                        for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                            fila_master[8] = "Empy".parse()?;  // Asignar valores de la primera columna como cadenas
+                                        }
+                                    }
                                 }
 
                                 // COD CIUDAD
                                 // CIUDAD
-                                if let Some(valor) = fila.get(8).and_then(|v| v.as_ref()) {
-                                    let valor_str = limpiar_cadenaV2(valor.as_str());
-                                    println!("Valor a consultar en la DB: {}", valor_str);
+                                let valor_str = limpiar_cadenaV2(valor_sap);
+                                println!("Valor a consultar en la DB: {}", valor_str);
 
-                                    let mut connection = establish_connection().await.unwrap();
+                                let mut connection = establish_connection().await.unwrap();
 
-                                    let query = format!("SELECT T1.*
+                                let query_4 = format!("SELECT T1.*
                                                             FROM WMS_EC.dbo.MC_CLIENTE_CNT T0
                                                             INNER JOIN WMS_EC.dbo.MC_WEB_PROVINCIAS_CIUDADES T1 ON T1.ID_CIUDAD = T0.PROVINCIA
                                                             WHERE T0.CL_SAP LIKE '{}'", valor_str);
 
-                                    println!("Query: {}", query);
+                                println!("Query: {}", query_4);
 
-                                    let cli: Result<Vec<MC_WEB_PROVINCIAS_CIUDADES>, sqlx::Error> = sqlx::query_as(&query)
-                                        .fetch_all(&mut connection)
-                                        .await;
+                                let cli: Result<Vec<MC_WEB_PROVINCIAS_CIUDADES>, sqlx::Error> = sqlx::query_as(&query_4)
+                                    .fetch_all(&mut connection)
+                                    .await;
 
-                                    match cli {
-                                        Ok(clientes) => {
+                                match cli {
+                                    Ok(clientes) => {
 
-                                            // Haz algo con los resultados (en este caso, imprimir el estado del primer cliente)
-                                            if let Some(primer_cliente) = clientes.get(0) {
-                                                println!("DESCRIPCION_ALMACEN Cliente: {:?}", primer_cliente.NOMBRE_CIUDAD);
+                                        // Haz algo con los resultados (en este caso, imprimir el estado del primer cliente)
+                                        if let Some(primer_cliente) = clientes.get(0) {
+                                            println!("DESCRIPCION_ALMACEN Cliente: {:?}", primer_cliente.NOMBRE_CIUDAD);
 
-                                                // Añadir valores a la primera columna de matrizMaster
-                                                for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                                    fila_master[9] = limpiar_cadenaV2(primer_cliente.NOMBRE_CIUDAD.as_str()).to_string();  // Asignar valores de la primera columna como cadenas
-                                                }
-                                            } else {
-                                                println!("La consulta no devolvió ningún cliente");
-
-                                                for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                                    fila_master[9] = "Empy".parse()?;  // Asignar valores de la primera columna como cadenas
-                                                }
+                                            // Añadir valores a la primera columna de matrizMaster
+                                            for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                                fila_master[9] = limpiar_cadenaV2(primer_cliente.NOMBRE_CIUDAD.as_str()).to_string();  // Asignar valores de la primera columna como cadenas
                                             }
-                                        }
-                                        Err(err) => {
-                                            println!("No se encuentra");
+                                        } else {
+                                            println!("La consulta no devolvió ningún cliente");
+
                                             for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
                                                 fila_master[9] = "Empy".parse()?;  // Asignar valores de la primera columna como cadenas
                                             }
                                         }
                                     }
-                                } else {
-                                    print!("Empty ");
+                                    Err(err) => {
+                                        println!("No se encuentra");
+                                        for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                            fila_master[9] = "Empy".parse()?;  // Asignar valores de la primera columna como cadenas
+                                        }
+                                    }
                                 }
+
 
                                 // CAMPO FIJO BLANCO
                                 // GUIA COURIER
@@ -3783,14 +3864,10 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
 
                                 // ALMACEN RECEPTOR
                                 // Almacén
-                                if let Some(valor) = fila.get(10).and_then(|v| v.as_ref()) {
-                                    // Añadir valores a la primera columna de matrizMaster
-                                    for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                        fila_master[11] = limpiar_cadenaV2(valor).to_string();  // Asignar valores de la primera columna como cadenas
-                                    }
-                                } else {
-                                    print!("Empty ");
+                                for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                    fila_master[11] = "9000".parse()?;  // Asignar valores de la primera columna como cadenas
                                 }
+
 
                                 // CAMPO FIJO
                                 // COURIER
@@ -3800,63 +3877,60 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
 
                                 // REGIONAL BASE CLIENTES
                                 // CANAL
-                                if let Some(valor) = fila.get(8).and_then(|v| v.as_ref()) {
-                                    let valor_str = limpiar_cadenaV2(valor.as_str());
-                                    println!("Valor a consultar en la DB: {}", valor_str);
+                                let valor_str = limpiar_cadenaV2(valor_sap);
+                                println!("Valor a consultar en la DB: {}", valor_str);
 
-                                    let mut connection = establish_connection().await.unwrap();
+                                let mut connection = establish_connection().await.unwrap();
 
-                                    let query = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CL_SAP LIKE '{}'", valor_str);
+                                let query_5 = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CL_SAP LIKE '{}'", valor_str);
 
-                                    println!("Query: {}", query);
+                                println!("Query: {}", query_5);
 
-                                    let cli: Result<Vec<McClienteCntAux>, sqlx::Error> = sqlx::query_as(&query)
-                                        .fetch_all(&mut connection)
-                                        .await;
+                                let cli: Result<Vec<McClienteCntAux>, sqlx::Error> = sqlx::query_as(&query_5)
+                                    .fetch_all(&mut connection)
+                                    .await;
 
-                                    match cli {
-                                        Ok(clientes) => {
+                                match cli {
+                                    Ok(clientes) => {
 
-                                            // Haz algo con los resultados (en este caso, imprimir el estado del primer cliente)
-                                            if let Some(primer_cliente) = clientes.get(0) {
-                                                println!("DESCRIPCION_ALMACEN Cliente: {:?}", primer_cliente.REGIONAL);
+                                        // Haz algo con los resultados (en este caso, imprimir el estado del primer cliente)
+                                        if let Some(primer_cliente) = clientes.get(0) {
+                                            println!("DESCRIPCION_ALMACEN Cliente: {:?}", primer_cliente.REGIONAL);
 
-                                                // Añadir valores a la primera columna de matrizMaster
-                                                for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                                    fila_master[13] = limpiar_cadenaV2(primer_cliente.REGIONAL.as_str()).to_string();  // Asignar valores de la primera columna como cadenas
-                                                }
-                                            } else {
-                                                println!("La consulta no devolvió ningún cliente");
-
-                                                for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
-                                                    fila_master[13] = "Empy".parse()?;  // Asignar valores de la primera columna como cadenas
-                                                }
+                                            // Añadir valores a la primera columna de matrizMaster
+                                            for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                                fila_master[13] = limpiar_cadenaV2(primer_cliente.REGIONAL.as_str()).to_string();  // Asignar valores de la primera columna como cadenas
                                             }
-                                        }
-                                        Err(err) => {
-                                            println!("No se encuentra");
+                                        } else {
+                                            println!("La consulta no devolvió ningún cliente");
+
                                             for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
                                                 fila_master[13] = "Empy".parse()?;  // Asignar valores de la primera columna como cadenas
                                             }
                                         }
                                     }
-                                } else {
-                                    print!("Empty ");
+                                    Err(err) => {
+                                        println!("No se encuentra");
+                                        for (i, fila_master) in matrizMaster.iter_mut().enumerate() {
+                                            fila_master[13] = "Empy".parse()?;  // Asignar valores de la primera columna como cadenas
+                                        }
+                                    }
                                 }
+
 
                                 // PIA BASE CLIENTES
                                 // COD.CLIENTE
-                                if let Some(valor) = fila.get(8).and_then(|v| v.as_ref()) {
-                                    let valor_str = limpiar_cadenaV2(valor.as_str());
+
+                                    let valor_str = limpiar_cadenaV2(valor_sap);
                                     println!("Valor a consultar en la DB: {}", valor_str);
 
                                     let mut connection = establish_connection().await.unwrap();
 
-                                    let query = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CL_SAP LIKE '{}'", valor_str);
+                                    let query_6 = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CL_SAP LIKE '{}'", valor_str);
 
-                                    println!("Query: {}", query);
+                                    println!("Query: {}", query_6);
 
-                                    let cli: Result<Vec<McClienteCntAux>, sqlx::Error> = sqlx::query_as(&query)
+                                    let cli: Result<Vec<McClienteCntAux>, sqlx::Error> = sqlx::query_as(&query_6)
                                         .fetch_all(&mut connection)
                                         .await;
 
@@ -3886,9 +3960,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                             }
                                         }
                                     }
-                                } else {
-                                    print!("Empty ");
-                                }
+
 
                                 // CAMPO FIJO
                                 // OBSERVACION
@@ -3899,17 +3971,16 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 // CANAL BASE CLIENTES
                                 // CATEGORÍA
 
-                                if let Some(valor) = fila.get(8).and_then(|v| v.as_ref()) {
-                                    let valor_str = limpiar_cadenaV2(valor.as_str());
+                                    let valor_str = limpiar_cadenaV2(valor_sap);
                                     println!("Valor a consultar en la DB: {}", valor_str);
 
                                     let mut connection = establish_connection().await.unwrap();
 
-                                    let query = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CL_SAP LIKE '{}'", valor_str);
+                                    let query_7 = format!("SELECT * FROM WMS_EC.dbo.MC_CLIENTE_CNT WHERE CL_SAP LIKE '{}'", valor_str);
 
-                                    println!("Query: {}", query);
+                                    println!("Query: {}", query_7);
 
-                                    let cli: Result<Vec<McClienteCntAux>, sqlx::Error> = sqlx::query_as(&query)
+                                    let cli: Result<Vec<McClienteCntAux>, sqlx::Error> = sqlx::query_as(&query_7)
                                         .fetch_all(&mut connection)
                                         .await;
 
@@ -3939,9 +4010,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                             }
                                         }
                                     }
-                                } else {
-                                    print!("Empty ");
-                                }
+
 
                                 // CAMPO BLANCO
                                 // ARTICULO
@@ -3967,57 +4036,57 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                             }
 
                             // Mostrar la matriz después de la modificación
-                            println!("MATRIZ CONSOLIDADO:");
+                            println!("MATRIZ POP:");
                             imprimir_matriz(&matrizMaster);
 
-                            //=====================GUARDAR LOS DATOS CONSOLIDADOS EN LA DB
+                                //=====================GUARDAR LOS DATOS CONSOLIDADOS EN LA DB
 
-                            // Establecer la conexión fuera del bucle
-                            let mut connection = establish_connection().await.unwrap();
+                                // Establecer la conexión fuera del bucle
+                                let mut connection = establish_connection().await.unwrap();
 
-                            // Construir la consulta SQL fuera del bucle
-                            let query = "insert into MC_WEB_CONSOLIDADO_CARGA_PEDIDOS (FECHA, PEDIDO_TRASLADO, CENTRO_SUMINISTRADOR, ALMACEN_EMISOR, MATERIAL,
-                                              DESCRIPCION_MATERIAL, CANTIDAD, CENTRO, DESCRIPCION_CENTRO, CIUDAD,
-                                              GUIA_COURIER, ALMACEN_RECEPTOR, COURIER, CANAL, COD_CLIENTE,
-                                              OBSERVACION, CATEGORIA, ARTICULO, ALMACEN, PEDIDO)
-                        values (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20);";
+                                // Construir la consulta SQL fuera del bucle
+                                let query = "insert into MC_WEB_CONSOLIDADO_CARGA_PEDIDOS (FECHA, PEDIDO_TRASLADO, CENTRO_SUMINISTRADOR, ALMACEN_EMISOR, MATERIAL,
+                                                  DESCRIPCION_MATERIAL, CANTIDAD, CENTRO, DESCRIPCION_CENTRO, CIUDAD,
+                                                  GUIA_COURIER, ALMACEN_RECEPTOR, COURIER, CANAL, COD_CLIENTE,
+                                                  OBSERVACION, CATEGORIA, ARTICULO, ALMACEN, PEDIDO)
+                            values (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20);";
 
-                            for fila in &matrizMaster {
+                                for fila in &matrizMaster {
 
-                                // Limpiar cada valor en la fila
-                                let valores_limpios: Vec<String> =
-                                    fila.iter().map(|valor| limpiar_cadenaV2(valor)).collect();
+                                    // Limpiar cada valor en la fila
+                                    let valores_limpios: Vec<String> =
+                                        fila.iter().map(|valor| limpiar_cadenaV2(valor)).collect();
 
 
-                                // Ejecutar la consulta dentro del bucle
-                                if let Err(err) = sqlx::query(query)
-                                    .bind(&valores_limpios[0])
-                                    .bind(&valores_limpios[1])
-                                    .bind(&valores_limpios[2])
-                                    .bind(&valores_limpios[3])
-                                    .bind(&valores_limpios[4])
-                                    .bind(&valores_limpios[5])
-                                    .bind(&valores_limpios[6])
-                                    .bind(&valores_limpios[7])
-                                    .bind(&valores_limpios[8])
-                                    .bind(&valores_limpios[9])
-                                    .bind(&valores_limpios[10])
-                                    .bind(&valores_limpios[11])
-                                    .bind(&valores_limpios[12])
-                                    .bind(&valores_limpios[13])
-                                    .bind(&valores_limpios[14])
-                                    .bind(&valores_limpios[15])
-                                    .bind(&valores_limpios[16])
-                                    .bind(&valores_limpios[17])
-                                    .bind(&valores_limpios[18])
-                                    .bind(&valores_limpios[19])
-                                    .execute(&mut connection)
-                                    .await
-                                {
-                                    eprintln!("Error al insertar en la base de datos: {}", err);
-                                    // Puedes optar por devolver un Result a la función o manejar el error de otra manera.
+                                    // Ejecutar la consulta dentro del bucle
+                                    if let Err(err) = sqlx::query(query)
+                                        .bind(&valores_limpios[0])
+                                        .bind(&valores_limpios[1])
+                                        .bind(&valores_limpios[2])
+                                        .bind(&valores_limpios[3])
+                                        .bind(&valores_limpios[4])
+                                        .bind(&valores_limpios[5])
+                                        .bind(&valores_limpios[6])
+                                        .bind(&valores_limpios[7])
+                                        .bind(&valores_limpios[8])
+                                        .bind(&valores_limpios[9])
+                                        .bind(&valores_limpios[10])
+                                        .bind(&valores_limpios[11])
+                                        .bind(&valores_limpios[12])
+                                        .bind(&valores_limpios[13])
+                                        .bind(&valores_limpios[14])
+                                        .bind(&valores_limpios[15])
+                                        .bind(&valores_limpios[16])
+                                        .bind(&valores_limpios[17])
+                                        .bind(&valores_limpios[18])
+                                        .bind(&valores_limpios[19])
+                                        .execute(&mut connection)
+                                        .await
+                                    {
+                                        eprintln!("Error al insertar en la base de datos: {}", err);
+                                        // Puedes optar por devolver un Result a la función o manejar el error de otra manera.
+                                    }
                                 }
-                            }
 
                             return Ok(HttpResponse::Ok().json("¡Archivo válido!"));
                         } else {
@@ -4028,9 +4097,9 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
 
                         //Fin.
                     } else {
-                        println!("No se encontró la hoja 'PEDIDOS_PUNTUALES'");
+                        println!("No se encontró la hoja 'PEDIDOS_POP'");
 
-                        return Ok(HttpResponse::BadRequest().json("Formato de archivo incorrecto"));
+                        return Ok(HttpResponse::BadRequest().json("POP | Formato de archivo incorrecto"));
                     }
 
                     // Asegurarse de que el archivo temporal se elimine cuando ya no se necesite
@@ -4039,9 +4108,8 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
             }
         }
     }
-    Ok(HttpResponse::Ok().json("Archivo procesado exitosamente")) // Puedes ajustar el mensaje según sea necesario
+    Ok(HttpResponse::Ok().json("POP | Archivo procesado exitosamente")) // Puedes ajustar el mensaje según sea necesario
 }
-
 
 
 pub fn config(conf: &mut web::ServiceConfig) {
