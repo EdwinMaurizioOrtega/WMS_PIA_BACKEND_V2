@@ -8,10 +8,12 @@ use calamine::{open_workbook, Reader, Xlsx};
 use chrono::Local;
 use futures::{AsyncReadExt, StreamExt};
 use serde_json::json;
+use sqlx::Row;
 use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCnt, McClienteCntAux};
 use crate::models::mc_consolidado::{MC_WEB_CONSOLIDADO_CARGA_PEDIDOS, PedidoConsolidado};
+use crate::models::user_model::User;
 
 
 // Función para limpiar el valor
@@ -3177,10 +3179,8 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                     // El archivo temporal se eliminará automáticamente al salir del bloque de alcance.
                     // Al utilizar NamedTempFile, el archivo temporal se eliminará automáticamente cuando la variable temp_file salga del alcance.
 
-
                     //if let Some(Ok(range)) = workbook.worksheet_range("PEDIDOS_REABASTECIMIENTO") {
                     if let Some(Ok(range)) = workbook.worksheet_range_at(0) {
-
 
                         //Validación todas las columnas
                         let mut boolean_validacion_all: Vec<bool> = vec![];
@@ -3218,6 +3218,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 boolean_validacion_all.push(true);
                             } else {
                                 println!("No todos los elementos son true.");
+                                boolean_validacion_all.push(false);
                             }
                         }
 
@@ -3234,7 +3235,35 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                             if let Some(cell) = row.get(1) {
                                 println!("{:?}", cell);
                                 //Saber el número de filas.
-                                boolean_validacion_individual_2.push(true);
+
+                               let codArticulo = 556;
+
+                                let mut connection = establish_connection().await.unwrap();
+
+                                // Realiza la consulta SQL
+                                let query = format!("SELECT t.*
+                                            FROM WMS_EC.dbo.TC_CR_ARTICULO t
+                                            WHERE ART_PROCEDE = 7001 AND ARTICULO = {}
+                                            ORDER BY VALOR1_NUM", codArticulo);
+
+                                // Ejecuta la consulta y obtén el resultado
+                               let rows = sqlx::query(&*query)
+                                    .fetch_all(&mut connection)
+                                    .await
+                                    .unwrap();
+
+                                // Verifica la cantidad de resultados
+                                if rows.is_empty() {
+                                    //Si no se encuentra ningun resultado.
+                                    boolean_validacion_individual_2.push(false);
+
+                                }else {
+                                    //Si se encuentra mas de un resultado.
+                                    boolean_validacion_individual_2.push(true);
+
+                                }
+
+
                             }
                         }
 
@@ -3517,7 +3546,7 @@ async fn cargar_validar_file_pedidos_pop(mut payload: Multipart) -> Result<HttpR
                                 // ... Resto del código ...
                             }
 
-                            println!("MATRIZ PEDIDOS REABASTECIMIENTO:");
+                            println!("MATRIZ PEDIDOS POP:");
                             println!("{:?}", matriz);
 
                             println!("Imprimir Valores Matriz:");
