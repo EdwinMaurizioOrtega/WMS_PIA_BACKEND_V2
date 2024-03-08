@@ -33,6 +33,7 @@ async fn main() -> Result<(), std::io::Error> {
             .configure(routes::crm_logistica_nacional::config)
             .configure(routes::user_api::config)
             .configure(routes::crm_plantilla_upload::config)
+            .configure(routes::crm_fuxion_template_upload::config)
 
     })
         .bind(format!("{}:{}", host, port))?
