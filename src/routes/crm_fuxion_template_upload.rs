@@ -115,18 +115,13 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
             println!("2da Columna: ORDEN  DE COMPRA");
             //Validación primera columna
             let mut boolean_validacion_individual_1: Vec<bool> = vec![];
-            for (row_index, row) in range.rows().skip(1).enumerate() {
+            for (row_index, row) in range.rows().skip(4).enumerate() {
                 if let Some(cell) = row.get(1) {
                     // Verificar si la celda contiene datos -- Muy importante
                     if !cell.is_empty() {
                         println!("{:?}", cell);
 
-
                         let valor_columna_1 = match row.get(1) {
-                            Some(valor) => valor.to_string(),
-                            None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
-                        };
-                        let valor_columna_2 = match row.get(2) {
                             Some(valor) => valor.to_string(),
                             None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
                         };
@@ -136,22 +131,7 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
                             None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
                         };
 
-                        let valor_columna_4 = match row.get(4) {
-                            Some(valor) => valor.to_string(),
-                            None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
-                        };
-
-                        let valor_columna_5 = match row.get(5) {
-                            Some(valor) => valor.to_string(),
-                            None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
-                        };
-
-                        let valor_columna_6 = match row.get(6) {
-                            Some(valor) => valor.to_string(),
-                            None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
-                        };
-
-                        let nueva_fila: Vec<String> = vec![valor_columna_1, valor_columna_2, valor_columna_3, valor_columna_4, valor_columna_5, valor_columna_6];
+                        let nueva_fila: Vec<String> = vec![valor_columna_1, valor_columna_3];
 
                         // Agregamos algunos strings al vector
                         vector.push(nueva_fila);
@@ -290,29 +270,29 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
                                         Some(valor) => valor.to_string(),
                                         None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
                                     };
-                                    let valor_columna_archivo_3 = match fila.get(2) {
-                                        Some(valor) => valor.to_string(),
-                                        None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
-                                    };
-                                    let valor_columna_archivo_4 = match fila.get(3) {
-                                        Some(valor) => valor.to_string(),
-                                        None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
-                                    };
-                                    let valor_columna_archivo_5 = match fila.get(4) {
-                                        Some(valor) => valor.to_string(),
-                                        None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
-                                    };
-                                    let valor_columna_archivo_6 = match fila.get(5) {
-                                        Some(valor) => valor.to_string(),
-                                        None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
-                                    };
+                                    // let valor_columna_archivo_3 = match fila.get(2) {
+                                    //     Some(valor) => valor.to_string(),
+                                    //     None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
+                                    // };
+                                    // let valor_columna_archivo_4 = match fila.get(3) {
+                                    //     Some(valor) => valor.to_string(),
+                                    //     None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
+                                    // };
+                                    // let valor_columna_archivo_5 = match fila.get(4) {
+                                    //     Some(valor) => valor.to_string(),
+                                    //     None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
+                                    // };
+                                    // let valor_columna_archivo_6 = match fila.get(5) {
+                                    //     Some(valor) => valor.to_string(),
+                                    //     None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
+                                    // };
 
                                     // if let Some(primer_elemento) = fila.get(1) {
                                     //     println!("ORDEN PRIMARIA: {}", primer_elemento);
                                     // }
 
                                     // Agregamos una fila a la matriz
-                                    let nueva_fila: Vec<String> = vec![valor_columna_1, valor_columna_7, valor_columna_9, valor_columna_6, valor_columna_archivo_1, valor_columna_archivo_2, valor_columna_archivo_3, valor_columna_archivo_4, valor_columna_archivo_5, valor_columna_archivo_6];
+                                    let nueva_fila: Vec<String> = vec![valor_columna_1, valor_columna_7, valor_columna_9, valor_columna_6, valor_columna_archivo_1, valor_columna_archivo_2];
                                     matriz.push(nueva_fila);
                                 }
                             }
@@ -394,9 +374,9 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
                                      DISTRITO, CVECIUDAD,
                                      DIRECCION_REF, OBSERVACIONES, ESTATUS, FEC_ALTA, FEC_MODIF, ORIGEN_PEDIDO, URGENTE,
                                      FEC_DESPACHO, COD_VENDEDOR, PERSONA_RECIBE)
-        VALUES ({}, 7182, N'{}', 2, 7182, N'{}', N'{}', 0, 1, 0, 0, 0,
+        VALUES ({}, 7182, N'{}', 2, 7182, N'{}', N'000000', 0, 1, 0, 0, 0,
         N'TEST', N'{}', N'TEST', N'FUX_UIO_EC', N'', N'', N'N', N'{}',
-        N'{}', N'Andrea Salomé Ibarra Morillo', 0, null, N'', N'');"#, fila[4], formatted_date_time, fila[0], fila[6], corte, formatted_date_time, formatted_date_time);
+        N'{}', N'Andrea Salomé Ibarra Morillo', 0, null, N'', N'');"#, fila[4], formatted_date_time, fila[0], corte, formatted_date_time, formatted_date_time);
 
 
         // Limpiar cada valor en la fila
