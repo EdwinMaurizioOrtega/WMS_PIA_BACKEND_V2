@@ -426,7 +426,7 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
                                                   PEDIDO_CLIENTE, --Orden primaria
                                                   PERMITE_CENTRA,
                                                   CENTRALIZADO, REMISION)
-VALUES ({}, 7182, N'', N'{}', 0, N'', 0);"#, filaCENTRA[4], filaCENTRA[5]);
+VALUES ({}, 7182, N'', N'NA', 0, N'', 0);"#, filaCENTRA[4]);
 
 
         // Limpiar cada valor en la fila
