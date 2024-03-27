@@ -178,3 +178,14 @@ pub struct DespachoPedidosFuxionSend {
     pub RESPONSABLE: Option<String>,
     pub ESTATUS: Option<String>,
 }
+
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct InventarioReporteFuxionSend {
+    pub id: i64,
+    pub NOM_PRODUCTO: Option<String>,
+    pub CANTIDAD: i32,
+    pub OBS: Option<String>,
+    pub NOTAS: Option<String>,
+    pub ALMACEN: Option<String>,
+}

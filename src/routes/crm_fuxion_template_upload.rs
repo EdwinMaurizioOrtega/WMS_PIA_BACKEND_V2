@@ -14,7 +14,7 @@ use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCnt, McClienteCntAux};
 use crate::models::mc_consolidado::{MC_WEB_CONSOLIDADO_CARGA_PEDIDOS, PedidoConsolidado};
-use crate::models::pedido_prov::{DespachoPedidosFuxionSend, ParamsUpdateGuiaPDF};
+use crate::models::pedido_prov::{DespachoPedidosFuxionSend, InventarioReporteFuxionSend, ParamsUpdateGuiaPDF};
 use crate::models::user_model::User;
 
 
@@ -943,11 +943,39 @@ WHERE T0.PROCEDENCIA = 7182;".to_string();
     }
 }
 
+
+
+#[get("/reporte_inventarios")]
+async fn fuxion_reporte_inventarios () -> impl Responder {
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = "SELECT ROW_NUMBER() OVER (ORDER BY T0.ARTICULO) AS id,
+       T2.DESCRIPCION                           AS NOM_PRODUCTO,
+       T0.CANTIDAD,
+       T0.OBS,
+       T0.NOTAS,
+       T1.DESCRIPCION                           AS ALMACEN
+FROM TD_CR_ARTICULO_SIN_SERIE T0
+         INNER JOIN TC_CR_ALMACEN T1 ON T1.CVEALMACEN = T0.CVEALMACEN AND T1.CVECIUDAD LIKE 'FUX_UIO_EC'
+         INNER JOIN TC_CR_ARTICULO T2 ON T2.ARTICULO = T0.ARTICULO AND T2.ART_PROCEDE = 7182
+WHERE T0.ART_PROCEDE = 7182;".to_string();
+
+    let desp: Result<Vec<InventarioReporteFuxionSend>, sqlx::Error> = sqlx::query_as(&query)
+        .fetch_all(&mut connection)
+        .await;
+
+    match desp {
+        Ok(clientes) => HttpResponse::Ok().json(json!({"data": clientes})),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
+}
+
     pub fn config(conf: &mut web::ServiceConfig) {
         let scope = web::scope("/api/fuxion")
             .service(cargar_archivos_delivery)
             .service(cargar_archivos_consolidado)
             .service(update_number_guia_and_pdf)
+            .service(fuxion_reporte_inventarios)
             .service(fuxion_reporte_despachos)
             ;
 
