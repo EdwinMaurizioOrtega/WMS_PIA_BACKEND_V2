@@ -14,6 +14,7 @@ use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCnt, McClienteCntAux};
 use crate::models::mc_consolidado::{MC_WEB_CONSOLIDADO_CARGA_PEDIDOS, PedidoConsolidado};
+use crate::models::pedido_prov::ParamsUpdateGuiaPDF;
 use crate::models::user_model::User;
 
 
@@ -865,10 +866,45 @@ VALUES ({}, 7182, N'', N'{}', 0, N'', 0);"#, filaCENTRA[3], filaCENTRA[6]);
         Ok(HttpResponse::Ok().finish())
     }
 
+#[post("/update_guia_pdf")]
+async fn update_number_guia_and_pdf(new_obs: web::Json<ParamsUpdateGuiaPDF>) -> impl Responder {
+    println!("Contenido de data: {:?}", new_obs);
+
+    //Abrimos la conexión a la base de datos
+    let mut connection = establish_connection().await.unwrap();
+
+    //Lógica para comparar que datos se actualizaron
+
+    let query = format!("UPDATE WMS_EC.dbo.TD_CR_PEDIDO
+                                SET OBSERVACIONES = N'{}'
+                                WHERE NUM_PEDIDO = {}
+                                AND PROCEDENCIA = 7182;", new_obs.num_guia, new_obs.n_pedido);
+
+    println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
+
+    let result = sqlx::query(&query)
+        .execute(&mut connection)
+        .await;
+
+    match result {
+        Ok(_) => {
+            HttpResponse::Ok().json(json!({"status": "success", "data": "Ok"}))
+        }
+
+        Err(error) => {
+            // Imprimir el error al log o a la consola
+            eprintln!("Error al deserializar JSON: {:?}", error);
+
+            HttpResponse::NotFound().json(json!({"status": "fail", "message": "No tiene permisos."}))
+        }
+    }
+}
+
     pub fn config(conf: &mut web::ServiceConfig) {
         let scope = web::scope("/api/fuxion")
             .service(cargar_archivos_delivery)
             .service(cargar_archivos_consolidado)
+            .service(update_number_guia_and_pdf)
             ;
 
         conf.service(scope);

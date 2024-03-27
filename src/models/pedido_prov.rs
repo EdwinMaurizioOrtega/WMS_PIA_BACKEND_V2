@@ -156,3 +156,10 @@ pub struct QueryParamsDeleteImage {
     pub id: String,
     pub file_name: String,
 }
+
+#[derive(Debug, serde::Deserialize)]
+pub struct ParamsUpdateGuiaPDF {
+    pub n_pedido: String,
+    pub num_guia: String,
+    pub url_guia: String
+}
