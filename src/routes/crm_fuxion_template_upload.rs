@@ -14,7 +14,7 @@ use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCnt, McClienteCntAux};
 use crate::models::mc_consolidado::{MC_WEB_CONSOLIDADO_CARGA_PEDIDOS, PedidoConsolidado};
-use crate::models::pedido_prov::ParamsUpdateGuiaPDF;
+use crate::models::pedido_prov::{DespachoPedidosFuxionSend, ParamsUpdateGuiaPDF};
 use crate::models::user_model::User;
 
 
@@ -900,11 +900,55 @@ async fn update_number_guia_and_pdf(new_obs: web::Json<ParamsUpdateGuiaPDF>) -> 
     }
 }
 
+
+#[get("/reporte_despachos")]
+async fn fuxion_reporte_despachos () -> impl Responder {
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = "SELECT ROW_NUMBER() OVER (ORDER BY T0.NUM_PEDIDO) AS id,
+    FORMAT(T0.FECHA, 'yyyy-MM-dd HH:mm:ss') AS FECHA_FORMATEADA,
+       'SERVIENTREGA'  AS 'COURIER',
+       T1.DESCRIPCION,
+       T0.NUM_PEDIDO,
+       T0.OBSERVACIONES AS GUIA,
+       T2.CONTRATO     AS PESO,
+       'MOVILCELISTIC' AS RESPONSABLE,
+       CASE
+           WHEN T0.ESTATUS = 'N' THEN 'En Proceso'
+           WHEN T0.ESTATUS = 'M' THEN 'Empacado'
+           WHEN T0.ESTATUS = 'V' THEN 'Enviado(a)'
+           WHEN T0.ESTATUS = 'F' THEN 'Terminado'
+           WHEN T0.ESTATUS = 'R' THEN 'En Ruta'
+           WHEN T0.ESTATUS = 'G' THEN 'Entregado'
+           WHEN T0.ESTATUS = 'C' THEN 'Baja/Cancelado'
+           WHEN T0.ESTATUS = 'D' THEN 'Devuelto'
+           WHEN T0.ESTATUS = 'H' THEN 'Reservado'
+           WHEN T0.ESTATUS = 'L' THEN 'Apartado'
+           WHEN T0.ESTATUS = 'X' THEN 'Pre-Pedido'
+           WHEN T0.ESTATUS = 'T' THEN 'Finalizado'
+           END         AS ESTATUS
+
+FROM TD_CR_PEDIDO T0
+         LEFT JOIN TC_CR_CLIENTE T1 ON T1.CTE = T0.CTE AND T1.CTE_PROCEDE = 7182
+         LEFT JOIN TD_CR_PEDIDO_CONTRATO T2 ON T2.NUM_PEDIDO = T0.NUM_PEDIDO AND T2.PROCEDENCIA = 7182
+WHERE T0.PROCEDENCIA = 7182;".to_string();
+
+    let desp: Result<Vec<DespachoPedidosFuxionSend>, sqlx::Error> = sqlx::query_as(&query)
+        .fetch_all(&mut connection)
+        .await;
+
+    match desp {
+        Ok(clientes) => HttpResponse::Ok().json(json!({"data": clientes})),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
+}
+
     pub fn config(conf: &mut web::ServiceConfig) {
         let scope = web::scope("/api/fuxion")
             .service(cargar_archivos_delivery)
             .service(cargar_archivos_consolidado)
             .service(update_number_guia_and_pdf)
+            .service(fuxion_reporte_despachos)
             ;
 
         conf.service(scope);

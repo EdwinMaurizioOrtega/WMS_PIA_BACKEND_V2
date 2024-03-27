@@ -1,5 +1,7 @@
-use serde::Serialize;
+use chrono::NaiveDateTime;
+use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use tiberius::time::DateTime;
 
 // V1
 #[derive(Serialize, FromRow)]
@@ -162,4 +164,17 @@ pub struct ParamsUpdateGuiaPDF {
     pub n_pedido: String,
     pub num_guia: String,
     pub url_guia: String
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct DespachoPedidosFuxionSend {
+    pub id: i64,
+    pub FECHA_FORMATEADA: Option<String>,
+    pub COURIER: Option<String>,
+    pub DESCRIPCION: Option<String>,
+    pub NUM_PEDIDO: i32,
+    pub GUIA: Option<String>,
+    pub PESO: Option<String>,
+    pub RESPONSABLE: Option<String>,
+    pub ESTATUS: Option<String>,
 }
