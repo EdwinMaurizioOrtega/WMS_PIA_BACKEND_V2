@@ -183,6 +183,8 @@ pub struct DespachoPedidosFuxionSend {
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct InventarioReporteFuxionSend {
     pub id: i64,
+    pub COD_ART: i32,
+    pub UNI_MEDIDA: Option<String>,
     pub NOM_PRODUCTO: Option<String>,
     pub CANTIDAD: i32,
     pub OBS: Option<String>,

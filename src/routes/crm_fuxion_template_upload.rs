@@ -950,6 +950,8 @@ async fn fuxion_reporte_inventarios () -> impl Responder {
     let mut connection = establish_connection().await.unwrap();
 
     let query = "SELECT ROW_NUMBER() OVER (ORDER BY T0.ARTICULO) AS id,
+       T2.ARTICULO                              AS COD_ART,
+       T2.VALOR3                                AS UNI_MEDIDA,
        T2.DESCRIPCION                           AS NOM_PRODUCTO,
        T0.CANTIDAD,
        T0.OBS,
