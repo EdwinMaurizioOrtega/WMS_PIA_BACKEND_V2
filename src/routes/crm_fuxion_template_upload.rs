@@ -367,7 +367,7 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
 
     for fila in &matriz_sin_duplicados {
         let query = format!(r#"INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO (NUM_PEDIDO, PROCEDENCIA, FECHA,
-                                     CTE, --1 CONSOLIDADO 2 DELIVERY
+                                     CTE, --1 CONSOLIDADO 2 DELIVERY 3 ESPECIALES
 
                                      CTE_PROCEDE, CONTACTO, TEL_CONTACTO, TIPO,
                                      CANTIDAD, SUBTOTAL, IMPUESTO, TOTAL, PROVINCIA,
@@ -785,7 +785,7 @@ async fn cargar_archivos_consolidado(mut payload: Multipart) -> Result<HttpRespo
 
     for fila in &matriz_sin_duplicados {
         let query = format!(r#"INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO (NUM_PEDIDO, PROCEDENCIA, FECHA,
-                                     CTE, --1 CONSOLIDADO 2 DELIVERY
+                                     CTE, --1 CONSOLIDADO 2 DELIVERY 3 ESPECIALES
 
                                      CTE_PROCEDE, CONTACTO, TEL_CONTACTO, TIPO,
                                      CANTIDAD, SUBTOTAL, IMPUESTO, TOTAL, PROVINCIA,
