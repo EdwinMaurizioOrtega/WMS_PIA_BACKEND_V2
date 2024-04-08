@@ -366,7 +366,7 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
 
 
     for fila in &matriz_sin_duplicados {
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO (NUM_PEDIDO, PROCEDENCIA, FECHA,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TD_CR_PEDIDO (NUM_PEDIDO, PROCEDENCIA, FECHA,
                                      CTE, --1 CONSOLIDADO 2 DELIVERY 3 ESPECIALES
 
                                      CTE_PROCEDE, CONTACTO, TEL_CONTACTO, TIPO,
@@ -400,7 +400,7 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
     for filaPD in matriz {
         contadorPD += 1;
 
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO_DET (NUM_PEDIDO, PROCEDENCIA, ARTICULO, ART_PROCEDE,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TD_CR_PEDIDO_DET (NUM_PEDIDO, PROCEDENCIA, ARTICULO, ART_PROCEDE,
                                          LINEA, --Consecutivo para los items
                                          CANTIDAD, TOTAL, PRECIO,
                                          IMPUESTO, CAMPANIA, ART_PACK_NOLOGICO)
@@ -423,7 +423,7 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
 
     // --Add esto es importante
     for filaCENTRA in matriz_sin_duplicados {
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TR_CR_PEDIDO_CENTRALIZADO (NUM_PEDIDO, PROCEDENCIA, ORDEN_COMPRA,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TR_CR_PEDIDO_CENTRALIZADO (NUM_PEDIDO, PROCEDENCIA, ORDEN_COMPRA,
                                                   PEDIDO_CLIENTE, --Orden primaria
                                                   PERMITE_CENTRA,
                                                   CENTRALIZADO, REMISION)
@@ -783,7 +783,7 @@ async fn cargar_archivos_consolidado(mut payload: Multipart) -> Result<HttpRespo
     let formatted_date_time = now.format("%Y-%m-%d %H:%M:%S%.3f").to_string();
 
     for fila in &matriz_sin_duplicados {
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO (NUM_PEDIDO, PROCEDENCIA, FECHA,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TD_CR_PEDIDO (NUM_PEDIDO, PROCEDENCIA, FECHA,
                                      CTE, --1 CONSOLIDADO 2 DELIVERY 3 ESPECIALES
 
                                      CTE_PROCEDE, CONTACTO, TEL_CONTACTO, TIPO,
@@ -816,7 +816,7 @@ async fn cargar_archivos_consolidado(mut payload: Multipart) -> Result<HttpRespo
     for filaPD in matriz_consolidado_tabla_dos {
         contadorPD += 1;
 
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO_DET (NUM_PEDIDO, PROCEDENCIA, ARTICULO, ART_PROCEDE,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TD_CR_PEDIDO_DET (NUM_PEDIDO, PROCEDENCIA, ARTICULO, ART_PROCEDE,
                                          LINEA, --Consecutivo para los items
                                          CANTIDAD, TOTAL, PRECIO,
                                          IMPUESTO, CAMPANIA, ART_PACK_NOLOGICO)
@@ -839,7 +839,7 @@ async fn cargar_archivos_consolidado(mut payload: Multipart) -> Result<HttpRespo
 
     // --Add esto es importante
     for filaCENTRA in matriz_sin_duplicados {
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TR_CR_PEDIDO_CENTRALIZADO (NUM_PEDIDO, PROCEDENCIA, ORDEN_COMPRA,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TR_CR_PEDIDO_CENTRALIZADO (NUM_PEDIDO, PROCEDENCIA, ORDEN_COMPRA,
                                                   PEDIDO_CLIENTE, --Orden primaria
                                                   PERMITE_CENTRA,
                                                   CENTRALIZADO, REMISION)
@@ -1188,7 +1188,7 @@ async fn cargar_archivos_especiales(mut payload: Multipart) -> Result<HttpRespon
     let formatted_date_time = now.format("%Y-%m-%d %H:%M:%S%.3f").to_string();
 
     for fila in &matriz_sin_duplicados {
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO (NUM_PEDIDO, PROCEDENCIA, FECHA,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TD_CR_PEDIDO (NUM_PEDIDO, PROCEDENCIA, FECHA,
                                          CTE, --1 CONSOLIDADO 2 DELIVERY 3 ESPECIALES
     
                                          CTE_PROCEDE, CONTACTO, TEL_CONTACTO, TIPO,
@@ -1221,7 +1221,7 @@ async fn cargar_archivos_especiales(mut payload: Multipart) -> Result<HttpRespon
     for filaPD in matriz_consolidado_tabla_dos {
         contadorPD += 1;
 
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO_DET (NUM_PEDIDO, PROCEDENCIA, ARTICULO, ART_PROCEDE,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TD_CR_PEDIDO_DET (NUM_PEDIDO, PROCEDENCIA, ARTICULO, ART_PROCEDE,
                                              LINEA, --Consecutivo para los items
                                              CANTIDAD, TOTAL, PRECIO,
                                              IMPUESTO, CAMPANIA, ART_PACK_NOLOGICO)
@@ -1244,7 +1244,7 @@ async fn cargar_archivos_especiales(mut payload: Multipart) -> Result<HttpRespon
 
     // --Add esto es importante
     for filaCENTRA in matriz_sin_duplicados {
-        let query = format!(r#"INSERT INTO WMS_EC.dbo.TR_CR_PEDIDO_CENTRALIZADO (NUM_PEDIDO, PROCEDENCIA, ORDEN_COMPRA,
+        let query = format!(r#"INSERT INTO WMS_EC.dbo.MC_WEB_TR_CR_PEDIDO_CENTRALIZADO (NUM_PEDIDO, PROCEDENCIA, ORDEN_COMPRA,
                                                       PEDIDO_CLIENTE, --Orden primaria
                                                       PERMITE_CENTRA,
                                                       CENTRALIZADO, REMISION)
