@@ -333,7 +333,7 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
     }
 
 
-    println!("Orden Log Consola");
+    println!("Orden Log Consola Matriz sin Duplicados");
     // Imprimir la matriz sin filas duplicadas
     for fila in &matriz_sin_duplicados {
         for elemento in fila {
@@ -373,11 +373,13 @@ async fn cargar_archivos_delivery(mut payload: Multipart) -> Result<HttpResponse
                                      CANTIDAD, SUBTOTAL, IMPUESTO, TOTAL, PROVINCIA,
                                      CANTON, --Campo de corte del excel
                                      DISTRITO, CVECIUDAD,
-                                     DIRECCION_REF, OBSERVACIONES, ESTATUS, FEC_ALTA, FEC_MODIF, ORIGEN_PEDIDO, URGENTE,
+                                     DIRECCION_REF,
+                                     OBSERVACIONES, --ORDEN SERVIENTREGA
+                                     ESTATUS, FEC_ALTA, FEC_MODIF, ORIGEN_PEDIDO, URGENTE,
                                      FEC_DESPACHO, COD_VENDEDOR, PERSONA_RECIBE)
         VALUES ({}, 7182, N'{}', 2, 7182, N'{}', N'000000', 0, 1, 0, 0, 0,
-        N'TEST', N'{}', N'TEST', N'FUX_UIO_EC', N'', N'', N'N', N'{}',
-        N'{}', N'Andrea Salomé Ibarra Morillo', 0, null, N'', N'');"#, fila[4], formatted_date_time, fila[0], corte, formatted_date_time, formatted_date_time);
+        N'TEST', N'{}', N'TEST', N'FUX_UIO_EC', N'', N'{}', N'N', N'{}',
+        N'{}', N'Andrea Salomé Ibarra Morillo', 0, null, N'', N'');"#, fila[4], formatted_date_time, fila[0], corte, fila[5], formatted_date_time, formatted_date_time);
 
 
         // Limpiar cada valor en la fila
