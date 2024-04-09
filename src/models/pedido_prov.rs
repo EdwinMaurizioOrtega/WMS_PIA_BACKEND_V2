@@ -166,6 +166,12 @@ pub struct ParamsUpdateGuiaPDF {
     pub url_guia: String
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct ParamsUpdateKgOrden {
+    pub num_orden: String,
+    pub peso: String,
+}
+
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct DespachoPedidosFuxionSend {
     pub id: i64,

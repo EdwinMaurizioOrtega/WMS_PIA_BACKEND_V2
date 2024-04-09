@@ -14,7 +14,7 @@ use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCnt, McClienteCntAux};
 use crate::models::mc_consolidado::{MC_WEB_CONSOLIDADO_CARGA_PEDIDOS, PedidoConsolidado};
-use crate::models::pedido_prov::{DespachoPedidosFuxionSend, InventarioReporteFuxionSend, ParamsUpdateGuiaPDF};
+use crate::models::pedido_prov::{DespachoPedidosFuxionSend, InventarioReporteFuxionSend, ParamsUpdateGuiaPDF, ParamsUpdateKgOrden};
 use crate::models::user_model::User;
 
 
@@ -1377,6 +1377,41 @@ WHERE T0.ART_PROCEDE = 7182;".to_string();
     }
 }
 
+#[put("/update_kg_orden")]
+async fn fuxion_update_kg_despachos(new_obs: web::Json<ParamsUpdateKgOrden>) -> impl Responder {
+    println!("Contenido de data KG: {:?}", new_obs);
+
+    //Abrimos la conexión a la base de datos
+    let mut connection = establish_connection().await.unwrap();
+
+    //Lógica para comparar que datos se actualizaron
+
+    let query = format!("UPDATE WMS_EC.dbo.TD_CR_PEDIDO_CONTRATO
+                                SET CONTRATO = N'{}'
+                                WHERE NUM_PEDIDO = {}
+                                AND PROCEDENCIA = 7182;", new_obs.peso, new_obs.num_orden);
+
+    println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
+
+    let result = sqlx::query(&query)
+        .execute(&mut connection)
+        .await;
+
+    match result {
+        Ok(_) => {
+            HttpResponse::Ok().json(json!({"status": "success", "data": "Ok"}))
+        }
+
+        Err(error) => {
+            // Imprimir el error al log o a la consola
+            eprintln!("Error al deserializar JSON: {:?}", error);
+
+            HttpResponse::NotFound().json(json!({"status": "fail", "message": "No tiene permisos."}))
+        }
+    }
+}
+
+
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/fuxion")
         .service(cargar_archivos_delivery)
@@ -1385,6 +1420,7 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(update_number_guia_and_pdf)
         .service(fuxion_reporte_inventarios)
         .service(fuxion_reporte_despachos)
+        .service(fuxion_update_kg_despachos)
         ;
 
     conf.service(scope);
