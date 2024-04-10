@@ -14,7 +14,7 @@ use tempfile::{NamedTempFile, tempfile};
 use crate::database::connection::establish_connection;
 use crate::models::mc_cliente_cnt::{MC_WEB_PROVINCIAS_CIUDADES, McClienteCnt, McClienteCntAux};
 use crate::models::mc_consolidado::{MC_WEB_CONSOLIDADO_CARGA_PEDIDOS, PedidoConsolidado};
-use crate::models::pedido_prov::{DespachoPedidosFuxionSend, InventarioReporteFuxionSend, ParamsUpdateGuiaPDF, ParamsUpdateKgOrden};
+use crate::models::pedido_prov::{DespachoPedidosFuxionSend, InventarioReporteFuxionSend, ParamsInsertPedidoContrato, ParamsUpdateGuiaPDF, ParamsUpdateKgOrden};
 use crate::models::user_model::User;
 
 
@@ -1412,6 +1412,42 @@ async fn fuxion_update_kg_despachos(new_obs: web::Json<ParamsUpdateKgOrden>) -> 
 }
 
 
+#[post("/insert_pedido_contrato")]
+async fn fuxion_insert_pedido_contrato(new_obs: web::Json<ParamsInsertPedidoContrato>) -> impl Responder {
+    println!("Contenido de data insert: {:?}", new_obs);
+
+    //Abrimos la conexión a la base de datos
+    let mut connection = establish_connection().await.unwrap();
+
+    let now = Utc::now();
+    let formatted_date_time = now.format("%Y-%m-%d %H:%M:%S%.3f").to_string();
+    println!("{}", formatted_date_time);
+
+    //Lógica para comparar que datos se actualizaron
+    let query = format!("INSERT INTO WMS_EC.dbo.TD_CR_PEDIDO_CONTRATO (NUM_PEDIDO, PROCEDENCIA, CONTRATO, FECHA, REALIZO)
+                                VALUES ({}, 7182, N'{}', N'{}', N'Andrea Salomé Ibarra Morillo');", new_obs.num_orden, new_obs.peso, formatted_date_time);
+
+    println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
+
+    let result = sqlx::query(&query)
+        .execute(&mut connection)
+        .await;
+
+    match result {
+        Ok(_) => {
+            HttpResponse::Ok().json(json!({"status": "success", "data": "Ok"}))
+        }
+
+        Err(error) => {
+            // Imprimir el error al log o a la consola
+            eprintln!("Error al deserializar JSON: {:?}", error);
+
+            HttpResponse::NotFound().json(json!({"status": "fail", "message": "No tiene permisos."}))
+        }
+    }
+}
+
+
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/fuxion")
         .service(cargar_archivos_delivery)
@@ -1421,6 +1457,7 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(fuxion_reporte_inventarios)
         .service(fuxion_reporte_despachos)
         .service(fuxion_update_kg_despachos)
+        .service(fuxion_insert_pedido_contrato)
         ;
 
     conf.service(scope);

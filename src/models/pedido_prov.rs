@@ -172,6 +172,12 @@ pub struct ParamsUpdateKgOrden {
     pub peso: String,
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct ParamsInsertPedidoContrato {
+    pub num_orden: String,
+    pub peso: String,
+}
+
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct DespachoPedidosFuxionSend {
     pub id: i64,
