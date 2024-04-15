@@ -1316,6 +1316,7 @@ async fn fuxion_reporte_despachos() -> impl Responder {
        'SERVIENTREGA'  AS 'COURIER',
        T1.DESCRIPCION,
        T0.NUM_PEDIDO,
+        T0.DISTRITO AS NUM_CORTE,
        T0.OBSERVACIONES AS GUIA,
        T2.CONTRATO     AS PESO,
        'MOVILCELISTIC' AS RESPONSABLE,

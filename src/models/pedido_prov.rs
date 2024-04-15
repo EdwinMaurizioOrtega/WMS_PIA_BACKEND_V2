@@ -185,6 +185,7 @@ pub struct DespachoPedidosFuxionSend {
     pub COURIER: Option<String>,
     pub DESCRIPCION: Option<String>,
     pub NUM_PEDIDO: i32,
+    pub NUM_CORTE: Option<String>,
     pub GUIA: Option<String>,
     pub PESO: Option<String>,
     pub RESPONSABLE: Option<String>,
