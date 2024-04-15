@@ -1282,7 +1282,8 @@ async fn update_number_guia_and_pdf(new_obs: web::Json<ParamsUpdateGuiaPDF>) -> 
     //Lógica para comparar que datos se actualizaron
 
     let query = format!("UPDATE WMS_EC.dbo.TD_CR_PEDIDO
-                                SET OBSERVACIONES = N'{}'
+                                SET OBSERVACIONES = N'{}',
+                                TEL_CONTACTO = N'CAMBIO DE GUIA'
                                 WHERE NUM_PEDIDO = {}
                                 AND PROCEDENCIA = 7182;", new_obs.num_guia, new_obs.n_pedido);
 
