@@ -188,6 +188,7 @@ pub struct DespachoPedidosFuxionSend {
     pub NUM_CORTE: Option<String>,
     pub GUIA: Option<String>,
     pub PESO: Option<String>,
+    pub PESO_REF: Option<String>,
     pub RESPONSABLE: Option<String>,
     pub ESTATUS: Option<String>,
 }

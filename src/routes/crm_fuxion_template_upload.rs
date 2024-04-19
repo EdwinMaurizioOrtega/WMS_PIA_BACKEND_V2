@@ -1320,6 +1320,7 @@ async fn fuxion_reporte_despachos() -> impl Responder {
         T0.DISTRITO AS NUM_CORTE,
        T0.OBSERVACIONES AS GUIA,
        T2.CONTRATO     AS PESO,
+        T0.CANTON AS PESO_REF,
        'MOVILCELISTIC' AS RESPONSABLE,
        CASE
            WHEN T0.ESTATUS = 'N' THEN 'En Proceso'
