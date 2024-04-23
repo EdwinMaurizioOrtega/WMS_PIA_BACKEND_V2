@@ -1368,7 +1368,7 @@ async fn fuxion_reporte_inventarios() -> impl Responder {
 FROM TD_CR_ARTICULO_SIN_SERIE T0
          INNER JOIN TC_CR_ALMACEN T1 ON T1.CVEALMACEN = T0.CVEALMACEN AND T1.CVECIUDAD LIKE 'FUX_UIO_EC'
          INNER JOIN TC_CR_ARTICULO T2 ON T2.ARTICULO = T0.ARTICULO AND T2.ART_PROCEDE = 7182
-WHERE T0.ART_PROCEDE = 7182;".to_string();
+WHERE T0.ART_PROCEDE = 7182 AND T0.CANTIDAD > 0;".to_string();
 
     let desp: Result<Vec<InventarioReporteFuxionSend>, sqlx::Error> = sqlx::query_as(&query)
         .fetch_all(&mut connection)
