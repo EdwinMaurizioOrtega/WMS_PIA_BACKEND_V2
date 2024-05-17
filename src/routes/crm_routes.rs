@@ -3,7 +3,7 @@ use actix_web::error::ErrorInternalServerError;
 use actix_web::error::ParseError::Status;
 use sqlx::Executor;
 use sqlx::Row;
-use crate::models::pedido_prov::{PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
+use crate::models::pedido_prov::{FullReporteDespachosConsolidados, FullReporteDespachosSinSeries, PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
 use crate::database::connection::establish_connection;
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
@@ -591,6 +591,57 @@ async fn send_email_microsoft(query_params: web::Query<QueryParamsPedidoAndDN>) 
 }
 
 // =======Reporteria WMS - PIA=====
+
+#[get("/full_reporte_despachos_consolidados")]
+async fn get_full_reporte_despachos_consolidados(query_params: web::Query<QueryDateParams>) -> impl Responder {
+
+    println!("procedencia: {}", query_params.proced);
+
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = format!("SELECT * FROM FullDespachosConsolidados( {}, '{}', '{}');",
+        query_params.proced,
+        query_params.fec_inicio,
+        query_params.fec_fin
+    );
+
+    let pedidos: Vec<FullReporteDespachosConsolidados> = sqlx::query_as::<_, FullReporteDespachosConsolidados>(&query)
+        .fetch_all(&mut connection)
+        .await
+        .unwrap();
+
+    let user_response = serde_json::json!({"data": pedidos});
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+}
+
+#[get("/full_reporte_despachos_sin_series")]
+async fn get_full_reporte_despachos_sin_series(query_params: web::Query<QueryDateParams>) -> impl Responder {
+
+    println!("procedencia: {}", query_params.proced);
+
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = format!("SELECT * FROM FullDespachosSinSeries( {}, '{}', '{}');",
+                        query_params.proced,
+                        query_params.fec_inicio,
+                        query_params.fec_fin
+    );
+
+    let pedidos: Vec<FullReporteDespachosSinSeries> = sqlx::query_as::<_, FullReporteDespachosSinSeries>(&query)
+        .fetch_all(&mut connection)
+        .await
+        .unwrap();
+
+    let user_response = serde_json::json!({"data": pedidos});
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+}
+
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/wms")
         //Por número de pedido
@@ -606,7 +657,10 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(get_rango_fecha_llegada_pedido_proveedor_bodega)
         .service(get_despacho_pedido_proveedor)
         .service(get_despacho_detalle_pedido_proveedor)
-        .service(send_email_microsoft);
+        .service(send_email_microsoft)
+        .service(get_full_reporte_despachos_consolidados)
+        .service(get_full_reporte_despachos_sin_series)
+        ;
 
     conf.service(scope);
 }

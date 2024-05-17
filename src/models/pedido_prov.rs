@@ -205,3 +205,59 @@ pub struct InventarioReporteFuxionSend {
     pub NOTAS: Option<String>,
     pub ALMACEN: Option<String>,
 }
+
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct FullReporteDespachosConsolidados {
+    pub TIPO_ART: Option<String>,
+    pub ALMACEN: Option<String>,
+    pub PROPIEDAD: Option<String>,
+    pub TIPO: Option<String>,
+    pub TECNOLOGIA: Option<String>,
+    pub COD_OPEN: Option<i32>,
+    pub COD_SAP: Option<String>,
+    pub DESCRIPCION: Option<String>,
+    pub SERIE: Option<String>,
+    pub ICC: Option<String>,
+    pub MIN: Option<String>,
+    pub IMSI: Option<String>,
+    pub FECHA: Option<String>,
+    pub BODEGA_OPEN: Option<String>,
+    pub COD_DIRECTO: Option<String>,
+    pub ALMACEN_SAP: Option<String>,
+    pub BOD_SAP_ALM_SAP: Option<String>,
+    pub DESCR_BODEGA: Option<String>,
+    pub CANAL: Option<String>,
+    pub GUIA: Option<String>,
+    pub PEDIDO_SAP: Option<String>,
+    pub COD_INTERNO: Option<i32>,
+    pub SALIDA_SAP: Option<String>,
+    pub OBSERVACION: Option<String>,
+    pub PEDIDO_PIA: Option<i32>,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct FullReporteDespachosSinSeries {
+    pub TIPO_ANIDADO_ARTICULO: Option<String>,
+    pub GUIA_REMISION: Option<String>,
+    pub FECHA: Option<String>,
+    pub BODEGA_OPEN: Option<String>,
+    pub COD_DIRECTO: Option<String>,
+    pub ALMACEN_SAP: Option<String>,
+    pub BOD_SAP_ALM_SAP: Option<String>,
+    pub DESCR_BODEGA: Option<String>,
+    pub ANIDADO_PESO_TOTAL: Option<f64>,
+    pub ARTICULO_ANIDADO: Option<i32>,
+    pub ANIDADO_ARTICULO: Option<String>,
+    pub TOTAL_DESPACHADO: Option<f64>,
+    pub PIA: Option<i32>,
+    pub ANIDADO_COD_SAP: Option<String>,
+    pub PEDIDO_SAP: Option<String>,
+    pub PESO: Option<f64>,
+    pub COD_INTERNO: Option<i32>,
+    pub ARTICULO: Option<String>,
+    pub COD_SAP: Option<String>,
+    pub TIPO_ARTICULO: Option<String>,
+
+}
+
