@@ -3,7 +3,7 @@ use actix_web::error::ErrorInternalServerError;
 use actix_web::error::ParseError::Status;
 use sqlx::Executor;
 use sqlx::Row;
-use crate::models::pedido_prov::{FullReporteDespachosConsolidados, FullReporteDespachosSinSeries, PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
+use crate::models::pedido_prov::{FullReporteDespachosConsolidados, FullReporteDespachosSinSeries, FullReporteFormatoGuias, PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
 use crate::database::connection::establish_connection;
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
@@ -541,7 +541,8 @@ async fn send_email_microsoft(query_params: web::Query<QueryParamsPedidoAndDN>) 
         .unwrap();
 
 
-    let creds = Credentials::new("sistemas@movilcelistic.com".to_owned(), "gt5P4&M#C74c".to_owned());
+    //let creds = Credentials::new("sistemas@movilcelistic.com".to_owned(), "4n.i?Zo~o{59".to_owned());
+    let creds = Credentials::new("info@movilcelistic.com".to_owned(), "4n.i?Zo~o{59".to_owned());
 
     let correos = vec![
         "allerena@movilcelistic.com",
@@ -573,7 +574,7 @@ async fn send_email_microsoft(query_params: web::Query<QueryParamsPedidoAndDN>) 
         let mensaje = format!("Estimados,\n Se confirma el ingreso a bodega de la mercadería correspondiente a:\n\n PEDIDO PROVEEDOR: {} \nDN: {}", query_params.n_pedido, query_params.dn);
 
         let email = Message::builder()
-            .from("sistemas@movilcelistic.com".parse().unwrap())
+            .from("info@movilcelistic.com".parse().unwrap())
             .to(correo.parse().unwrap())
             .subject(asusnto)
             .header(ContentType::TEXT_PLAIN)
@@ -642,6 +643,81 @@ async fn get_full_reporte_despachos_sin_series(query_params: web::Query<QueryDat
         .json(user_response)
 }
 
+#[get("/full_reporte_formato_guias")]
+async fn get_full_reporte_formato_guias(query_params: web::Query<QueryDateParams>) -> impl Responder {
+
+    println!("procedencia: {}", query_params.proced);
+
+    let mut connection = establish_connection().await.unwrap();
+
+    // let query = format!("SELECT * FROM FullFormatoGuiasV2( {}, '{}', '{}');",
+    //                     query_params.proced,
+    //                     query_params.fec_inicio,
+    //                     query_params.fec_fin
+    // );
+
+    let query = "SELECT T2.CTE,
+       ''                                                AS NUMERO_GUIA,
+       T0.NUM_PEDIDO                                     AS DETALLE_ENVIO_1,
+       T1.PEDIDO_CLIENTE                                 AS DETALLE_ENVIO_2,
+       ''                                                AS DETALLE_ENVIO_3,
+       T2.DESC1                                          AS CIUDAD_DESTINO,
+       ''                                                AS SECTOR,
+       ''                                                AS CODIGO_DESTINATARIO,
+       T2.DESC_CB                                        AS RAZON_SOCIAL_DESTINATARIO,
+       T3.CONTACTO                                       AS NOMBRE_DESTINATARIO,
+       ''                                                AS APELLIDO_DESTINATARIO,
+       T3.LINEA1                                         AS DIRECCION1_DESTINATARIO,
+       T3.CONTACTO_TEL                                   AS TELEFONO1_DESTINATARIO,
+       ''                                                AS TELEFONO2_DESTINATARIO,
+       ''                                                AS CODIGO_POSTAL_DESTINATARIO,
+       '2'                                               AS PRODUCTO,
+       T7.DESCRIPCION                                    AS ART_TIPO,
+       T4.CANTIDAD,
+       ''                                                AS PIEZAS,
+       T0.TOTAL,
+       ''                                                AS VALOR_ASEGURADO,
+       ''                                                AS LARGO,
+       ''                                                AS ANCHO,
+       ''                                                AS ALTO,
+       REPLACE(REPLACE(T5.CONTRATO, 'kg', ''), '.', ',') AS PESO,
+       ''                                                AS NUMERO_GUIA_SOBRERETORNO,
+       ''                                                AS FECHA_FACTURA,
+       ''                                                AS NUMERO_FACTURA,
+       ''                                                AS VALOR_FACTURA,
+       ''                                                AS DETALLE_ITEMS_FACTURA,
+       ''                                                AS VERIFICAR_CONTENIDO_RECAUDO,
+       ''                                                AS VALOR_FLETE_RECAUDO,
+       ''                                                AS VALOR_COMISION_RECAUDO,
+       ''                                                AS VALOR_SEGURO_RECAUDO,
+       ''                                                AS VALOR_IMPUESTO_RECAUDO,
+       ''                                                AS VALOR_OTROS_RECAUDO
+
+FROM WMS_EC.dbo.TD_CR_PEDIDO T0
+         INNER JOIN WMS_EC.dbo.TR_CR_PEDIDO_CENTRALIZADO T1 ON T1.NUM_PEDIDO = T0.NUM_PEDIDO AND T1.PROCEDENCIA = T0.PROCEDENCIA
+         INNER JOIN WMS_EC.dbo.TC_CR_CLIENTE T2 ON T2.CTE = T0.CTE AND T2.CTE_PROCEDE = T0.PROCEDENCIA
+         INNER JOIN WMS_EC.dbo.TC_CR_CLIENTE_DIRECCION T3 ON T3.CTE = T0.CTE AND T3.CTE_PROCEDE = T0.CTE_PROCEDE
+         INNER JOIN WMS_EC.dbo.TD_CR_PEDIDO_DET T4 ON T4.NUM_PEDIDO = T0.NUM_PEDIDO AND T4.PROCEDENCIA = T0.PROCEDENCIA
+         INNER JOIN WMS_EC.dbo.TC_CR_ARTICULO T6 ON T6.ARTICULO = T4.ARTICULO AND T6.ART_PROCEDE = T4.ART_PROCEDE
+         INNER JOIN WMS_EC.dbo.TC_CR_ARTICULO_TIPO T7 ON T7.ART_TIPO = T6.ART_TIPO
+         INNER JOIN WMS_EC.dbo.TD_CR_PEDIDO_CONTRATO T5 ON T5.NUM_PEDIDO = T0.NUM_PEDIDO AND T5.PROCEDENCIA = T0.PROCEDENCIA
+WHERE T0.PROCEDENCIA = 7001
+  AND T2.CTE IN ( 112,  114)
+  AND T0.FECHA BETWEEN '2024-05-13' AND '2024-05-14'
+ORDER BY T2.CTE;".to_string();
+
+    let pedidos: Vec<FullReporteFormatoGuias> = sqlx::query_as::<_, FullReporteFormatoGuias>(&query)
+        .fetch_all(&mut connection)
+        .await
+        .unwrap();
+
+    let user_response = serde_json::json!({"data": pedidos});
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+}
+
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/wms")
         //Por número de pedido
@@ -660,6 +736,7 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(send_email_microsoft)
         .service(get_full_reporte_despachos_consolidados)
         .service(get_full_reporte_despachos_sin_series)
+        .service(get_full_reporte_formato_guias)
         ;
 
     conf.service(scope);

@@ -261,3 +261,42 @@ pub struct FullReporteDespachosSinSeries {
 
 }
 
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct FullReporteFormatoGuias {
+    pub NUMERO_GUIA: Option<String>,
+    pub DETALLE_ENVIO_1: Option<i32>,
+    pub DETALLE_ENVIO_2: Option<String>,
+    pub DETALLE_ENVIO_3: Option<String>,
+    pub CIUDAD_DESTINO: Option<String>,
+    pub SECTOR: Option<String>,
+    pub CODIGO_DESTINATARIO: Option<String>,
+    pub RAZON_SOCIAL_DESTINATARIO: Option<String>,
+    pub NOMBRE_DESTINATARIO: Option<String>,
+    pub APELLIDO_DESTINATARIO: Option<String>,
+    pub DIRECCION1_DESTINATARIO: Option<String>,
+    pub TELEFONO1_DESTINATARIO: Option<String>,
+    pub TELEFONO2_DESTINATARIO: Option<String>,
+    pub CODIGO_POSTAL_DESTINATARIO: Option<String>,
+    pub PRODUCTO: Option<String>,
+    pub ART_TIPO: Option<String>,
+    pub CANTIDAD: Option<f64>,
+    pub PIEZAS: Option<String>,
+    pub TOTAL: Option<f64>,
+    pub VALOR_ASEGURADO: Option<String>,
+    pub LARGO: Option<String>,
+    pub ANCHO: Option<String>,
+    pub ALTO: Option<String>,
+    pub PESO: Option<String>,
+    pub NUMERO_GUIA_SOBRERETORNO: Option<String>,
+    pub FECHA_FACTURA: Option<String>,
+    pub NUMERO_FACTURA: Option<String>,
+    pub VALOR_FACTURA: Option<String>,
+    pub DETALLE_ITEMS_FACTURA: Option<String>,
+    pub VERIFICAR_CONTENIDO_RECAUDO: Option<String>,
+    pub VALOR_FLETE_RECAUDO: Option<String>,
+    pub VALOR_COMISION_RECAUDO: Option<String>,
+    pub VALOR_SEGURO_RECAUDO: Option<String>,
+    pub VALOR_IMPUESTO_RECAUDO: Option<String>,
+    pub VALOR_OTROS_RECAUDO: Option<String>,
+
+}
