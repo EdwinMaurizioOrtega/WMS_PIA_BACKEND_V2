@@ -3,7 +3,7 @@ use actix_web::error::ErrorInternalServerError;
 use actix_web::error::ParseError::Status;
 use sqlx::Executor;
 use sqlx::Row;
-use crate::models::pedido_prov::{FullReporteDespachosConsolidados, FullReporteDespachosSinSeries, FullReporteFormatoGuias, PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
+use crate::models::pedido_prov::{FullReporteDespachosConsolidados, FullReporteDespachosSinSeries, FullReporteFormatoGuias, FullReporteInventarioInicialBodega, PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
 use crate::database::connection::establish_connection;
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
@@ -718,6 +718,26 @@ ORDER BY T2.CTE;".to_string();
         .json(user_response)
 }
 
+
+#[get("/full_reporte_inventario_inicial_bodega")]
+async fn get_full_reporte_inventario_inicial_bodega() -> impl Responder {
+
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = "SELECT * FROM dbo.FullReporteInventarioInicialBodega;".to_string();
+
+    let pedidos: Vec<FullReporteInventarioInicialBodega> = sqlx::query_as::<_, FullReporteInventarioInicialBodega>(&query)
+        .fetch_all(&mut connection)
+        .await
+        .unwrap();
+
+    let user_response = serde_json::json!({"data": pedidos});
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+}
+
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/wms")
         //Por número de pedido
@@ -737,6 +757,7 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(get_full_reporte_despachos_consolidados)
         .service(get_full_reporte_despachos_sin_series)
         .service(get_full_reporte_formato_guias)
+        .service(get_full_reporte_inventario_inicial_bodega)
         ;
 
     conf.service(scope);

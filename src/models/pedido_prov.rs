@@ -300,3 +300,20 @@ pub struct FullReporteFormatoGuias {
     pub VALOR_OTROS_RECAUDO: Option<String>,
 
 }
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct FullReporteInventarioInicialBodega {
+    pub COD_OPEN: Option<i32>,
+    pub COD_SAP: Option<String>,
+    pub DESCRIPCION: Option<String>,
+    pub CANTIDAD: Option<i32>,
+    pub TIPO: Option<String>,
+    pub PROPIEDAD: Option<String>,
+    pub ESTADO: Option<String>,
+    pub DESCR_UBICACION: Option<String>,
+    pub TECNOLOGIA: Option<String>,
+    pub MARCA: Option<String>,
+    pub GAMA: Option<String>,
+    pub UBICACION: Option<String>,
+    pub TIPO_ARTICULO: Option<String>
+}
