@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::fs::read;
+use std::io::Write;
+use actix_multipart::Multipart;
 use actix_web::{delete, Error, get, HttpResponse, post, put, Responder, web};
 use chrono::{DateTime, Utc};
 use lettre::{Message, SmtpTransport, Transport};
@@ -7,7 +9,9 @@ use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
 use serde_json::json;
 use calamine::{Reader, open_workbook, Xlsx, RangeDeserializerBuilder, DataType};
+use futures::StreamExt;
 use log::kv::Source;
+use tempfile::NamedTempFile;
 use tiberius::{AuthMethod, Client, Config};
 use tokio::net::TcpStream;
 
@@ -552,6 +556,131 @@ async fn close_local_cnt(cliente_data: web::Json<DeleteRequest>) -> impl Respond
     }
 }
 
+#[post("/bulk_upload_of_guides")]
+async fn bulk_upload_of_guides_fn(mut payload: Multipart) -> Result<HttpResponse, actix_web::Error> {
+    let mut vector: Vec<Vec<String>> = Vec::new();
+
+    if let Some(item) = payload.next().await {
+        let mut field = item?;
+        let content_type = field.content_disposition();
+
+        if let Some(filename) = content_type.get_filename() {
+            println!("Nombre del primer archivo recibido: {}", filename);
+        } else {
+            println!("No se pudo obtener el nombre del primer archivo.");
+        }
+
+        let mut temp_file = NamedTempFile::new()?;
+        let mut file_content = Vec::new();
+
+        while let Some(chunk) = field.next().await {
+            let data = chunk?;
+            file_content.extend_from_slice(&data);
+            temp_file.write_all(&data)?;
+        }
+
+        let temp_file_path = temp_file.path().to_owned();
+
+        let mut workbook: Xlsx<_> = open_workbook(&temp_file_path).expect("Cannot open file");
+
+        if let Some(Ok(range)) = workbook.worksheet_range_at(0) {
+
+            //Número de filas
+            let mut totalFilas: i32 = 0;
+            //Validación primera columna
+            for (row_index, row) in range.rows().skip(1).enumerate() {
+                if let Some(cell) = row.get(0) {
+                    // Verificar si la celda contiene datos -- Muy importante
+                    if !cell.is_empty() {
+                        println!("{:?}", cell);
+
+                        let valor_columna_1 = match row.get(0) {
+                            Some(valor) => valor.to_string(),
+                            None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
+                        };
+
+                        let valor_columna_2 = match row.get(1) {
+                            Some(valor) => valor.to_string(),
+                            None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
+                        };
+
+                        let valor_columna_3 = match row.get(2) {
+                            Some(valor) => valor.to_string(),
+                            None => "-".to_string(), // Puedes establecer un valor por defecto si es necesario
+                        };
+
+                        let nueva_fila: Vec<String> = vec![valor_columna_1, valor_columna_2, valor_columna_3];
+
+                        // Agregamos algunos strings al vector
+                        vector.push(nueva_fila);
+
+                        //Saber el número de filas.
+                        totalFilas += 1;
+                    } else {
+                        // Si la celda está vacía, se puede detener el bucle
+                        break;
+                    }
+                }
+            }
+
+            println!("Número total de filas: {}", totalFilas);
+        }
+    } else {
+        println!("No se encontró el primer archivo en la carga útil multipart.");
+    }
+
+
+    // for fila in &vector {
+    //     if let Some(segundo_elemento) = fila.get(0) {
+    //         println!("{}", segundo_elemento);
+    //     }
+    // }
+
+    for fila in &vector {
+        for elemento in fila {
+            println!("{}", elemento);
+        }
+        println!(); // Imprime una línea en blanco para separar las filas
+    }
+
+    //Abrimos la conexión a la base de datos
+    let mut connection = establish_connection().await.unwrap();
+
+    // Actualizar los datos en la tabla
+    for (i, fila) in vector.iter().enumerate() {
+        if fila.len() >= 3 {
+            let query = format!("UPDATE WMS_EC.dbo.TD_CR_PEDIDO
+                                SET OBSERVACIONES = N'{}',
+                                TEL_CONTACTO = N'CAMBIO DE GUIA'
+                                WHERE NUM_PEDIDO = {}
+                                AND PROCEDENCIA = {};", fila[2], fila[1], fila[0]);
+
+            println!("Generated SQL query: {}", query); // Imprimir la consulta SQL generada
+
+
+            let result = sqlx::query(&query)
+                .execute(&mut connection)
+                .await;
+        }
+    }
+
+    // match result {
+    //     Ok(_) => {
+    //         HttpResponse::Ok().json(json!({"status": "success", "data": "Ok"}))
+    //     }
+    //
+    //     Err(error) => {
+    //         // Imprimir el error al log o a la consola
+    //         eprintln!("Error al deserializar JSON: {:?}", error);
+    //
+    //         HttpResponse::NotFound().json(json!({"status": "fail", "message": "No tiene permisos."}))
+    //     }
+    // }
+
+
+    Ok(HttpResponse::Ok().json("Archivo procesado exitosamente")) // Puedes ajustar el mensaje según sea necesario
+}
+
 
 pub fn config(conf: &mut web::ServiceConfig) {
     let scope = web::scope("/api/logistica-nacional")
@@ -560,6 +689,8 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(update_cliente_cnt)
         .service(delete_cliente_cnt)
         .service(get_all_parroquias)
+        //Actualizar masivamente las guias de una procedencia
+        .service(bulk_upload_of_guides_fn)
         .service(close_local_cnt)
         ;
 
