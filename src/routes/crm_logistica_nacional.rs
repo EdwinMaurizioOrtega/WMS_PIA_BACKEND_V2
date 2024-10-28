@@ -649,8 +649,7 @@ async fn bulk_upload_of_guides_fn(mut payload: Multipart) -> Result<HttpResponse
     for (i, fila) in vector.iter().enumerate() {
         if fila.len() >= 3 {
             let query = format!("UPDATE WMS_EC.dbo.TD_CR_PEDIDO
-                                SET OBSERVACIONES = N'{}',
-                                TEL_CONTACTO = N'CAMBIO DE GUIA'
+                                SET OBSERVACIONES = N'{}'
                                 WHERE NUM_PEDIDO = {}
                                 AND PROCEDENCIA = {};", fila[2], fila[1], fila[0]);
 
