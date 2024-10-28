@@ -3,7 +3,7 @@ use actix_web::error::ErrorInternalServerError;
 use actix_web::error::ParseError::Status;
 use sqlx::Executor;
 use sqlx::Row;
-use crate::models::pedido_prov::{FullReporteDespachosConsolidados, FullReporteDespachosSinSeries, FullReporteFormatoGuias, FullReporteInventarioInicialBodega, FullReporteInventarioInicialInterno, PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
+use crate::models::pedido_prov::{FullReporteDespachosConsolidados, FullReporteDespachosSinSeries, FullReporteFormatoGuias, FullReporteInventarioInicialBodega, FullReporteInventarioInicialInterno, PedidoAlbaran, PedidoAlvaranDet, PedidoProv, PedidoV2, PedidoV3, PedidoV4, PedidoV5, PedidoV6, PedidoV7, QueryDateParams, QueryParams, QueryParamsPedidoAndDN};
 use crate::database::connection::establish_connection;
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
@@ -458,6 +458,58 @@ WHERE T0.NUM_PEDIDO = {}
 }
 
 
+#[get("/reporte_despacho_pedido_proveedor_albaran")]
+async fn get_despacho_pedido_proveedor_albaran(query_params: web::Query<QueryParams>) -> impl Responder {
+    println!("n_pedido: {}", query_params.n_pedido);
+    println!("procedencia: {}", query_params.procedencia);
+
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = format!(
+        "SELECT T0.NUM_PEDIDO,
+       T0.PROCEDENCIA,
+       CONVERT(NVARCHAR(30), T0.FECHA, 120) AS FECHA,
+       T0.CONTACTO,
+       T0.TEL_CONTACTO,
+       T0.CANTIDAD,
+       T0.TOTAL,
+       T0.CANTON,
+       T0.PROVINCIA,
+       T1.DESCRIPCION,
+       T2.CONTRATO,
+       T3.BULTOS,
+       T0.OBSERVACIONES                     AS GUIA_REMISION,
+       T10.PEDIDO_CLIENTE                   AS PEDIDO_SAP,
+       T4.DESCRIPCION                       AS CLIENTE,
+       T4.LINEA1                            AS DIRECCION,
+       T4.LINEA2                            AS PROVINCIA_CIUDAD,
+       T4.CONTACTO                          AS CONTACTO_DOS,
+       T4.CONTACTO_TEL
+FROM dbo.TD_CR_PEDIDO T0
+         INNER JOIN TC_CR_CLIENTE T1 ON T1.CTE = T0.CTE and T1.CTE_PROCEDE = T0.CTE_PROCEDE
+         INNER JOIN TC_CR_CLIENTE_DIRECCION T4 ON T4.CTE = T0.CTE and T4.CTE_PROCEDE = T0.CTE_PROCEDE
+         INNER JOIN TD_CR_PEDIDO_CONTRATO T2 ON T0.NUM_PEDIDO = T2.NUM_PEDIDO and T0.PROCEDENCIA = T2.PROCEDENCIA
+         INNER JOIN TD_CR_PEDIDO_TRANSPORTE T3 ON T0.NUM_PEDIDO = T3.NUM_PEDIDO and T0.PROCEDENCIA = T3.PROCEDENCIA
+         LEFT JOIN TR_CR_PEDIDO_CENTRALIZADO T10 ON T10.NUM_PEDIDO = T0.NUM_PEDIDO AND T10.PROCEDENCIA = T0.PROCEDENCIA
+WHERE T0.NUM_PEDIDO = {}
+  AND T0.PROCEDENCIA = {};",
+        query_params.n_pedido,
+        query_params.procedencia
+    );
+
+    let pedidos: Vec<PedidoAlbaran> = sqlx::query_as::<_, PedidoAlbaran>(&query)
+        .fetch_all(&mut connection)
+        .await
+        .unwrap();
+
+    let user_response = serde_json::json!({"data": pedidos});
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+}
+
+
 #[get("/reporte_despacho_detalle_pedido_proveedor")]
 async fn get_despacho_detalle_pedido_proveedor(query_params: web::Query<QueryParams>) -> impl Responder {
     println!("n_pedido: {}", query_params.n_pedido);
@@ -495,6 +547,44 @@ WHERE NUM_PEDIDO = {}
         .json(user_response)
 }
 
+#[get("/reporte_despacho_detalle_pedido_proveedor_albaran")]
+async fn get_despacho_detalle_pedido_proveedor_albaran(query_params: web::Query<QueryParams>) -> impl Responder {
+    println!("n_pedido: {}", query_params.n_pedido);
+    println!("procedencia: {}", query_params.procedencia);
+
+    let mut connection = establish_connection().await.unwrap();
+
+    let query = format!(
+        "SELECT T0.NUM_PEDIDO,
+       T0.PROCEDENCIA,
+       T0.ARTICULO,
+       T0.CANTIDAD,
+       T0.TOTAL,
+       T1.DESCRIPCION,
+       T1.ART_TIPO,
+       T2.DESCRIPCION AS DESCRIPCION_2,
+       T1.VALOR1      AS COD_SAP
+FROM dbo.TD_CR_PEDIDO_DET T0
+         INNER JOIN dbo.TC_CR_ARTICULO T1 ON T1.ARTICULO = T0.ARTICULO AND T1.ART_PROCEDE = T0.ART_PROCEDE
+         INNER JOIN TC_CR_ARTICULO_TIPO T2 ON T1.ART_TIPO = T2.ART_TIPO
+WHERE NUM_PEDIDO = {}
+  AND PROCEDENCIA = {};
+",
+        query_params.n_pedido,
+        query_params.procedencia
+    );
+
+    let pedidos: Vec<PedidoAlvaranDet> = sqlx::query_as::<_, PedidoAlvaranDet>(&query)
+        .fetch_all(&mut connection)
+        .await
+        .unwrap();
+
+    let user_response = serde_json::json!({"data": pedidos});
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(user_response)
+}
 
 #[get("/send_email")]
 async fn send_email_microsoft(query_params: web::Query<QueryParamsPedidoAndDN>) -> Result<HttpResponse, actix_web::Error> {
@@ -771,6 +861,8 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(get_rango_fecha_creacion_pedido_proveedor)
         .service(get_rango_fecha_llegada_pedido_proveedor_bodega)
         .service(get_despacho_pedido_proveedor)
+        .service(get_despacho_pedido_proveedor_albaran)
+        .service(get_despacho_detalle_pedido_proveedor_albaran)
         .service(get_despacho_detalle_pedido_proveedor)
         .service(send_email_microsoft)
         .service(get_full_reporte_despachos_consolidados)

@@ -23,9 +23,10 @@ jsonwebtoken = "9.0.0"
 log = "0.4"
 env_logger = "0.11.3"
 calamine = "0.22.1"
-tiberius = "0.12.2"
 tokio-util = "0.7.9"
 tempfile = "3.8.0"
+time = "0.3.36"
+anyhow = "1.0.91"  # Use the latest version here
 
 [dependencies.mongodb]
 version = "2.6.0"

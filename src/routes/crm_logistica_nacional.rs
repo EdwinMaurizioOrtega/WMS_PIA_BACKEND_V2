@@ -12,7 +12,6 @@ use calamine::{Reader, open_workbook, Xlsx, RangeDeserializerBuilder, DataType};
 use futures::StreamExt;
 use log::kv::Source;
 use tempfile::NamedTempFile;
-use tiberius::{AuthMethod, Client, Config};
 use tokio::net::TcpStream;
 
 use crate::database::connection::{establish_connection};

@@ -1,7 +1,5 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use tiberius::time::DateTime;
 
 // V1
 #[derive(Serialize, FromRow)]
@@ -117,6 +115,29 @@ pub struct PedidoV6 {
 }
 
 #[derive(Serialize, FromRow)]
+pub struct PedidoAlbaran {
+    pub NUM_PEDIDO: i32,
+    pub PROCEDENCIA: i32,
+    pub FECHA: String,
+    pub CONTACTO: String,
+    pub TEL_CONTACTO: String,
+    pub CANTIDAD: f64,
+    pub TOTAL: f64,
+    pub CANTON: String,
+    pub PROVINCIA: String,
+    pub DESCRIPCION: String,
+    pub CONTRATO: String,
+    pub BULTOS: i32,
+    pub GUIA_REMISION: Option<String>,
+    pub PEDIDO_SAP:Option<String>,
+    pub CLIENTE:Option<String>,
+    pub DIRECCION:Option<String>,
+    pub PROVINCIA_CIUDAD:Option<String>,
+    pub CONTACTO_DOS:Option<String>,
+    pub CONTACTO_TEL:Option<String>
+}
+
+#[derive(Serialize, FromRow)]
 pub struct PedidoV7 {
     pub NUM_PEDIDO: i32,
     pub PROCEDENCIA: i32,
@@ -126,6 +147,19 @@ pub struct PedidoV7 {
     pub DESCRIPCION: String,
     pub ART_TIPO: i32,
     pub DESCRIPCION_2: String,
+}
+
+#[derive(Serialize, FromRow)]
+pub struct PedidoAlvaranDet {
+    pub NUM_PEDIDO: i32,
+    pub PROCEDENCIA: i32,
+    pub ARTICULO: i32,
+    pub CANTIDAD: f64,
+    pub TOTAL: f64,
+    pub DESCRIPCION: String,
+    pub ART_TIPO: i32,
+    pub DESCRIPCION_2: String,
+    pub COD_SAP: String,
 }
 
 
