@@ -64,8 +64,8 @@ pub async fn get_user_access(id: i32) -> Option<Vec<Access>> {
     let mut connection = establish_connection().await.unwrap();
 
     // Realiza la consulta SQL
-    //let query = "SELECT * FROM WMS_EC.dbo.MC_WEB_USER WHERE ID = @p1";
-    let query = "select * from MC_WEB_ACCESS where USER_ID = $1";
+    let query = "SELECT * FROM WMS_EC.dbo.MC_WEB_ACCESS WHERE USER_ID = @p1";
+    //let query = "select USER_ID, SUBHEADER, PAGE from MC_WEB_ACCESS where USER_ID = $1";
     let id_param = id;
 
     // Ejecuta la consulta y obtén el resultado
