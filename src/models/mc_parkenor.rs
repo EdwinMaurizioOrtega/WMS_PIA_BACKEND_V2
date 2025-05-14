@@ -17,3 +17,16 @@ pub struct ParkenorProducts {
     pub BTL_MERCH: Option<i32>,
     pub PUBLICIDAD: Option<i32>,
 }
+
+
+#[derive(Deserialize, Clone)]
+pub struct QueryParamsSaveUrlImgProduct {
+    pub COD_PROD: String,
+    pub URL: String,
+
+}
+
+#[derive(serde::Deserialize)]
+pub struct QueryParamImageURL {
+    pub URL: String,
+}
