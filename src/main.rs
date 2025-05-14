@@ -35,7 +35,7 @@ async fn main() -> Result<(), std::io::Error> {
             .configure(routes::user_api::config)
             .configure(routes::crm_plantilla_upload::config)
             .configure(routes::crm_fuxion_template_upload::config)
-
+            .configure(routes::crm_parkenor::config)
     })
         .bind(format!("{}:{}", host, port))?
         .run()
