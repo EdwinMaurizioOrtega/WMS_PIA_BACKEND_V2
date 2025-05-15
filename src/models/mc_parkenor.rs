@@ -30,3 +30,20 @@ pub struct QueryParamsSaveUrlImgProduct {
 pub struct QueryParamImageURL {
     pub URL: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct ParkenorProductoDetalle {
+    pub IMAGEN: Option<String>,
+    pub DESCRIPCION: Option<String>,
+    pub COD_PIA: Option<i32>,
+    pub COD_ANTIGUO: Option<String>,
+    pub PRE_PAGO_MERCH: Option<i32>,
+    pub BTL_MERCH: Option<i32>,
+    pub PUBLICIDAD: Option<i32>,
+    pub UBICACION: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+pub struct QueryParamCodArticulo {
+    pub cod_articulo: String,
+}
