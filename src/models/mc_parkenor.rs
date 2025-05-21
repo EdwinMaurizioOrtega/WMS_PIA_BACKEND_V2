@@ -12,6 +12,7 @@ pub struct ParkenorImagenes {
 pub struct ParkenorProducts {
     pub IMAGEN: Option<String>,
     pub ARTICULO: Option<i32>,
+    pub COD_ANTIGUO: Option<String>,
     pub DESCRIPCION: Option<String>,
     pub PRE_PAGO_MERCH: Option<i32>,
     pub BTL_MERCH: Option<i32>,
